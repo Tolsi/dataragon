@@ -9,6 +9,7 @@ use base58::ToBase58;
 
 use chacha20_poly1305_aead::{encrypt, decrypt};
 use shamirsecretsharing::hazmat::{create_keyshares, combine_keyshares};
+use std::io::Error;
 
 /// Secret sharing params.
 #[derive(StructOpt)]
@@ -20,9 +21,7 @@ struct SharingParams {
     /// Blah blah blah shamir's secret sharing scheme blah blah
     c: u8,
     #[structopt(short = "t", long = "threshold")]
-    t: u8,
-    #[structopt(short = "s", long = "secret")]
-    secret: String
+    t: u8
 }
 
 /// Stores an encrypted message with a message authentication tag
@@ -51,10 +50,18 @@ fn aead_unwrap(key: &[u8], boxed: CryptoSecretbox) -> Vec<u8> {
 fn main() {
     let args = SharingParams::from_args();
 
-    // Create a some shares over the secret data `[42, 42, 42, ...]`
-    let text = args.secret.as_bytes();
     let count = args.c;
     let threshold = args.t;
+
+    let read_result = rpassword::read_password_from_tty(Some("Enter your secret (the input is hidden): "));
+
+    let password = if read_result.is_err() {
+        rpassword::prompt_password_stdout("Enter your secret (the input is hidden): ").unwrap()
+    } else {
+        read_result.unwrap()
+    };
+
+    let text = password.as_bytes();
 
     let (boxed, keyshares) = {
         // Generate an ephemeral key
