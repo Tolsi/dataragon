@@ -5,6 +5,11 @@ use structopt::StructOpt;
 extern crate chacha20_poly1305_aead;
 extern crate rand;
 extern crate shamirsecretsharing;
+extern crate reed_solomon;
+
+use reed_solomon::Encoder;
+use reed_solomon::Decoder;
+
 use base58::ToBase58;
 
 use chacha20_poly1305_aead::{encrypt, decrypt};
@@ -47,6 +52,37 @@ fn aead_unwrap(key: &[u8], boxed: CryptoSecretbox) -> Vec<u8> {
     text
 }
 
+fn print_ecc(data: &[u8]) {
+    // Length of error correction code
+    let ecc_len = data.len() * 2;
+
+    // Create encoder and decoder with
+    let enc = Encoder::new(ecc_len);
+    let dec = Decoder::new(ecc_len);
+
+    // Encode data
+    let encoded = enc.encode(&data[..]);
+
+    // Simulate some transmission errors
+    let mut corrupted = *encoded;
+    for i in 0..data.len() {
+        corrupted[i] = 0x0;
+    }
+
+    // Try to recover data
+    let known_erasures = [4];
+    let recovered = dec.correct(&mut corrupted, None).unwrap();
+
+    let orig_str = std::str::from_utf8(data).unwrap();
+    let recv_str = std::str::from_utf8(recovered.data()).unwrap();
+
+    println!("message:               {:?}", orig_str);
+    println!("original data:         {:?}", data);
+    println!("error correction code: {:?}", encoded.ecc());
+    println!("corrupted:             {:?}", corrupted);
+    println!("repaired:              {:?}", recv_str);
+}
+
 fn main() {
     let args = SharingParams::from_args();
 
@@ -62,6 +98,8 @@ fn main() {
     };
 
     let text = password.as_bytes();
+
+    print_ecc(text);
 
     let (boxed, keyshares) = {
         // Generate an ephemeral key
