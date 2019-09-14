@@ -7,7 +7,7 @@ extern crate rand;
 extern crate shamirsecretsharing;
 extern crate reed_solomon;
 
-use reed_solomon::Encoder;
+use reed_solomon::{Encoder, Buffer};
 use reed_solomon::Decoder;
 
 use base58::ToBase58;
@@ -52,34 +52,44 @@ fn aead_unwrap(key: &[u8], boxed: CryptoSecretbox) -> Vec<u8> {
     text
 }
 
-fn print_ecc(data: &[u8]) {
+fn encode_with_ecc(data: &[u8], ecc_len: usize) -> Buffer {
     // Length of error correction code
+    let enc = Encoder::new(ecc_len);
+    return enc.encode(&data[..]);
+}
+
+fn recover_with_ecc(data: Buffer, ecc_len: usize) -> Buffer {
+    // Length of error correction code
+    let dec = Decoder::new(ecc_len);
+    let known_erasures = None;
+    let recovered = dec.correct(&*data, known_erasures).unwrap();
+    return recovered;
+}
+
+fn print_ecc(data: &[u8]) {
     let ecc_len = data.len() * 2;
 
-    // Create encoder and decoder with
-    let enc = Encoder::new(ecc_len);
-    let dec = Decoder::new(ecc_len);
-
     // Encode data
-    let encoded = enc.encode(&data[..]);
-
-    // Simulate some transmission errors
-    let mut corrupted = *encoded;
-    for i in 0..data.len() {
-        corrupted[i] = 0x0;
-    }
-
-    // Try to recover data
-    let known_erasures = [4];
-    let recovered = dec.correct(&mut corrupted, None).unwrap();
+    let encoded = encode_with_ecc(data, ecc_len);
 
     let orig_str = std::str::from_utf8(data).unwrap();
-    let recv_str = std::str::from_utf8(recovered.data()).unwrap();
-
     println!("message:               {:?}", orig_str);
     println!("original data:         {:?}", data);
     println!("error correction code: {:?}", encoded.ecc());
-    println!("corrupted:             {:?}", corrupted);
+
+    // Simulate some transmission errors
+    let mut corrupted = encoded;
+    for i in data.len()+6..corrupted.len() {
+        corrupted[i] = 0x0;
+    }
+
+    println!("corrupted:             {:?}", *corrupted);
+
+    // Try to recover data
+    let recovered = recover_with_ecc(corrupted, ecc_len);
+
+    let recv_str = std::str::from_utf8(recovered.data()).unwrap();
+
     println!("repaired:              {:?}", recv_str);
 }
 
@@ -127,4 +137,29 @@ fn main() {
     };
 
     assert_eq!(restored, text);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ecc_works() {
+        let data = "abc".as_bytes();
+        let ecc_len = data.len() * 2;
+
+        // Encode data
+        let encoded = encode_with_ecc(data, ecc_len);
+
+        // Simulate some transmission errors
+        let mut corrupted = encoded;
+        for i in data.len()+6..corrupted.len() {
+            corrupted[i] = 0x0;
+        }
+
+        // Try to recover data
+        let recovered = recover_with_ecc(corrupted, ecc_len);
+
+        assert_eq!(data, recovered.data());
+    }
 }
