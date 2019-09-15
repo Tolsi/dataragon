@@ -1,20 +1,22 @@
-use shamirsecretsharing::*;
-
 use structopt::StructOpt;
 
 extern crate chacha20_poly1305_aead;
 extern crate rand;
 extern crate shamirsecretsharing;
 extern crate reed_solomon;
+extern crate sha2;
+extern crate crc;
 
 use reed_solomon::{Encoder, Buffer};
 use reed_solomon::Decoder;
 
 use base58::ToBase58;
 
+use sha2::{Sha256, Sha512, Digest};
+use crc::{crc16, Hasher16};
+
 use chacha20_poly1305_aead::{encrypt, decrypt};
 use shamirsecretsharing::hazmat::{create_keyshares, combine_keyshares};
-use std::io::Error;
 
 /// Secret sharing params.
 #[derive(StructOpt)]
@@ -109,6 +111,9 @@ fn main() {
 
     let text = password.as_bytes();
 
+    let crc_bytes = &paranoid_checksum(text).to_be_bytes();
+    println!("{:?}", crc_bytes);
+
     print_ecc(text);
 
     let (boxed, keyshares) = {
@@ -162,4 +167,11 @@ mod tests {
 
         assert_eq!(data, recovered.data());
     }
+}
+
+fn paranoid_checksum(data: &[u8]) -> u16 {
+    let mut hasher = Sha512::new();
+    hasher.input(data);
+    let result = hasher.result();
+    return crc16::checksum_usb(result.as_slice());
 }
