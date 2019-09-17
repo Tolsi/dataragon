@@ -1,37 +1,54 @@
+extern crate base58;
 extern crate chacha20_poly1305_aead;
+extern crate map_in_place;
 extern crate rand;
 extern crate shamirsecretsharing;
-extern crate base58;
 
-use chacha20_poly1305_aead::{encrypt, decrypt};
-use shamirsecretsharing::hazmat::{create_keyshares, combine_keyshares};
-use base58::ToBase58;
+use map_in_place::MapVecInPlace;
+use shamirsecretsharing::hazmat::{combine_keyshares, create_keyshares};
 
-/// Stores an encrypted message with a message authentication tag
-struct CryptoSecretbox {
-    ciphertext: Vec<u8>,
-    tag: Vec<u8>,
+use crate::objects::CryptoSecretbox;
+
+pub fn create_data_shares(data: &[u8], count: u8, threshold: u8) -> (Vec<Vec<u8>>, CryptoSecretbox) {
+    // Generate an ephemeral key
+    let ref key = rand::random::<[u8; 32]>();
+
+    // Encrypt the text using the key
+    let boxed = aead_wrap(key, data);
+
+    // Share the key using `create_keyshares`
+    let keyshares = create_keyshares(key, count, threshold).unwrap();
+
+    return (keyshares, boxed);
+}
+
+pub fn restore_data_shared(shares: Vec<&[u8]>, b: CryptoSecretbox) -> Vec<u8> {
+    // Recover the key using `combine_keyshares`
+    let key = combine_keyshares(&shares.map_in_place(|s| Vec::from(s))).unwrap();
+
+    // Decrypt the secret message using the restored key
+    return aead_unwrap(&key, b);
 }
 
 /// AEAD encrypt the message with `key`
 fn aead_wrap(key: &[u8], text: &[u8]) -> CryptoSecretbox {
     let nonce = vec![0; 12];
     let mut ciphertext = Vec::with_capacity(text.len());
-    let tag = encrypt(&key, &nonce, &[], text, &mut ciphertext).unwrap().to_vec();
-    CryptoSecretbox { ciphertext: ciphertext, tag: tag }
+    let tag = chacha20_poly1305_aead::encrypt(&key, &nonce, &[], text, &mut ciphertext).unwrap().to_vec();
+    CryptoSecretbox { ciphertext, tag }
 }
 
 /// AEAD decrypt the message with `key`
 fn aead_unwrap(key: &[u8], boxed: CryptoSecretbox) -> Vec<u8> {
-    let CryptoSecretbox { ciphertext, tag} = boxed;
+    let CryptoSecretbox { ciphertext, tag } = boxed;
     let nonce = vec![0; 12];
     let mut text = Vec::with_capacity(ciphertext.len());
-    decrypt(&key, &nonce, &[], &ciphertext, &tag, &mut text).unwrap();
+    chacha20_poly1305_aead::decrypt(&key, &nonce, &[], &ciphertext, &tag, &mut text).unwrap();
     text
 }
 
 #[cfg(test)]
-mod tests {
+mod test {
     use super::*;
 
     #[test]
@@ -52,10 +69,6 @@ mod tests {
 
             (boxed, keyshares)
         };
-
-        for share in keyshares.iter() {
-            println!("Share: {:?}", share.as_slice().to_base58());
-        }
 
         let restored = {
             // Recover the key using `combine_keyshares`
