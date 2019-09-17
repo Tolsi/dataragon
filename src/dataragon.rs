@@ -11,6 +11,7 @@ pub fn split(text: &[u8], allowed_data_damage_level: f32, count: u8, threshold: 
     let ecc_len = text.len() * (2 as f32 * allowed_data_damage_level) as usize;
     let encoded = encode_with_ecc(text, ecc_len);
 
+    // todo why we need ecc of data inside the encrypted box?!
     let format_version: u8 = 0;
     let stored = StoredData {
         crc_algorithm: 0,

@@ -18,7 +18,7 @@ pub fn recover_with_ecc(data: Buffer, ecc_len: usize) -> Buffer {
 }
 
 
-pub fn print_ecc(data: &[u8], allowed_data_damage_level: f32) {
+pub fn debug_ecc(data: &[u8], allowed_data_damage_level: f32) {
     let ecc_len = data.len() * (2 as f32 * allowed_data_damage_level) as usize;
 
     // Encode data

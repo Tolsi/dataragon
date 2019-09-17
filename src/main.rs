@@ -44,9 +44,9 @@ fn main() {
 
     let encoded_secret_box: Vec<u8> = bincode::serialize(&secret_box).unwrap();
 
-    println!("{:?}", shares.map_in_place(|s| s.to_base58()));
-    println!("{:?}", encoded_secret_box.len());
-    ecc::print_ecc(text, 1.0);
+    println!("Shares: {:?}", shares.map_in_place(|s| s.to_base58()));
+    println!("Encrypted box: {:?}", encoded_secret_box.to_base58());
+    ecc::debug_ecc(text, 1.0);
 }
 
 #[cfg(test)]
