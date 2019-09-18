@@ -1,6 +1,9 @@
 use base58::ToBase58;
 use map_in_place::MapVecInPlace;
 use structopt::StructOpt;
+use crate::shamir::create_data_shares;
+use crate::serialization::paranoid_checksum;
+use crate::ecc::encode_with_ecc;
 
 use objects::*;
 
@@ -44,7 +47,7 @@ fn main() {
 
     let encoded_secret_box: Vec<u8> = bincode::serialize(&secret_box).unwrap();
 
-    println!("Shares: {:?}", shares.map_in_place(|s| s.to_base58()));
+    println!("Shares: {:?}", shares.map(|s| s.to_base58()));
     println!("Encrypted box: {:?}", encoded_secret_box.to_base58());
     ecc::debug_ecc(text, 1.0);
 }

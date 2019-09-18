@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct StoredData {
+    pub version: u8,
     pub crc_algorithm: u8,
     pub crc: Vec<u8>,
     pub ecc_algorithm: u8,

@@ -24,7 +24,7 @@ pub fn create_data_shares(data: &[u8], count: u8, threshold: u8) -> (Vec<Vec<u8>
 
 pub fn restore_data_shared(shares: Vec<&[u8]>, b: CryptoSecretbox) -> Vec<u8> {
     // Recover the key using `combine_keyshares`
-    let key = combine_keyshares(&shares.map_in_place(|s| Vec::from(s))).unwrap();
+    let key = combine_keyshares(&shares.map(|s| Vec::from(s))).unwrap();
 
     // Decrypt the secret message using the restored key
     return aead_unwrap(&key, b);
