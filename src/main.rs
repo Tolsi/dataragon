@@ -4,6 +4,7 @@ use structopt::StructOpt;
 use crate::shamir::create_data_shares;
 use crate::serialization::paranoid_checksum;
 use crate::ecc::encode_with_ecc;
+use crate::serialization::add_ecc_and_crc;
 
 use objects::*;
 
@@ -46,10 +47,11 @@ fn main() {
     let (shares, secret_box) = dataragon::split(text, allowed_data_damage_level, count, threshold);
 
     let encoded_secret_box: Vec<u8> = bincode::serialize(&secret_box).unwrap();
+    let encoded_secret_box_with_ecc_and_crc: Vec<u8> = add_ecc_and_crc(encoded_secret_box, allowed_data_damage_level);
 
     println!("Shares: {:?}", shares.map(|s| s.to_base58()));
-    println!("Encrypted box: {:?}", encoded_secret_box.to_base58());
-    ecc::debug_ecc(text, 1.0);
+    println!("Encrypted box: {:?}", encoded_secret_box_with_ecc_and_crc.to_base58());
+    ecc::debug_ecc(text, allowed_data_damage_level);
 }
 
 #[cfg(test)]
