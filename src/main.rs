@@ -52,6 +52,8 @@ fn main() {
     println!("Shares: {:?}", shares.map(|s| s.to_base58()));
     println!("Encrypted box: {:?}", encoded_secret_box_with_ecc_and_crc.to_base58());
     ecc::debug_ecc(text, allowed_data_damage_level);
+
+
 }
 
 #[cfg(test)]

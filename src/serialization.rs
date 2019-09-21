@@ -26,8 +26,22 @@ pub fn add_ecc_and_crc(data: Vec<u8>, allowed_data_damage_level: f32) -> Vec<u8>
         ecc_algorithm: 0,
         ecc: Vec::from(encoded.ecc()),
         encrypted_algorithm: 0,
-        data: Vec::from(encoded.data()),
+        data: Vec::from(data),
     };
 
     return bincode::serialize(&stored).unwrap();
+}
+
+pub fn try_to_read_shards_with_crc_and_ecc(stored_shares: &[u8]) -> Result<Vec<u8>, Err> {
+    let tryToDeserialize: Result<StoredData, Err> =  bincode::deserialize(&stored)
+    tryToDeserialize.map()
+    match tryToDeserialize {
+        Ok(storedData) =>
+            if (paranoid_checksum(storedData).to_be_bytes() == storedData.data) {
+
+            } else {
+                Err("")
+            }
+        Err(_) =>
+    }
 }
