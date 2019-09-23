@@ -45,16 +45,14 @@ fn main() {
     let text = password.as_bytes();
     let allowed_data_damage_level = 1.0;
 
-    let (shares, secret_box) = dataragon::split(text, allowed_data_damage_level, count, threshold);
+    dataragon::split(text, allowed_data_damage_level, count, threshold).map(|(shares, secret_box)| {
+        let encoded_secret_box: Vec<u8> = bincode::serialize(&secret_box).unwrap();
+        let encoded_secret_box_with_ecc_and_crc: Vec<u8> = add_ecc_and_crc(encoded_secret_box, allowed_data_damage_level);
 
-    let encoded_secret_box: Vec<u8> = bincode::serialize(&secret_box).unwrap();
-    let encoded_secret_box_with_ecc_and_crc: Vec<u8> = add_ecc_and_crc(encoded_secret_box, allowed_data_damage_level);
-
-    println!("Shares: {:?}", shares.map(|s| s.to_base58()));
-    println!("Encrypted box: {:?}", encoded_secret_box_with_ecc_and_crc.to_base58());
-    ecc::debug_ecc(text, allowed_data_damage_level);
-
-
+        println!("Shares: {:?}", shares.map(|s| s.to_base58()));
+        println!("Encrypted box: {:?}", encoded_secret_box_with_ecc_and_crc.to_base58());
+        ecc::debug_ecc(text, allowed_data_damage_level);
+    }).unwrap();
 }
 
 #[cfg(test)]

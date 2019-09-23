@@ -1,5 +1,3 @@
-#![feature(proc_macro_hygiene)]
-
 extern crate crc;
 extern crate sha2;
 
@@ -42,7 +40,7 @@ pub fn try_to_read_shards_with_crc_and_ecc(data: &[u8]) -> Result<Vec<u8>> {
     let try_to_deserialize: Result<StoredData> = bincode::deserialize(&data)
         .map_err(|e| Box::from(ErrorKind::BincodeDeserializationError(e)));
     return try_to_deserialize.and_then(|stored_data|
-        if (paranoid_checksum(stored_data.data.as_slice()).to_be_bytes() == stored_data.crc.as_slice()) {
+        if paranoid_checksum(stored_data.data.as_slice()).to_be_bytes() == stored_data.crc.as_slice() {
             Ok(stored_data.data)
         } else {
             let data_and_ecc_bytes = [stored_data.data.as_slice(), stored_data.ecc.as_slice()].concat();

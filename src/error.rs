@@ -3,6 +3,7 @@ use std::io;
 use std::str::Utf8Error;
 use std::{error, fmt};
 use reed_solomon::DecoderError;
+use shamirsecretsharing::SSSError;
 
 /// The result of a serialization or deserialization operation.
 pub type Result<T> = ::std::result::Result<T, Error>;
@@ -20,6 +21,9 @@ pub enum ErrorKind {
     InvalidUtf8Encoding(Utf8Error),
     ECCRecoveryError(DecoderError),
     BincodeDeserializationError(bincode::Error),
+    AEADEncryptionError(io::Error),
+    SSSEncryptionError(SSSError),
+    SSSDecryptionError(SSSError),
     /// If (de)serializing a message takes more than the provided size limit, this
     /// error is returned.
     SizeLimit,
@@ -33,6 +37,9 @@ impl StdError for ErrorKind {
             // todo
             ErrorKind::ECCRecoveryError(_) => "",
             ErrorKind::BincodeDeserializationError(_) => "",
+            ErrorKind::AEADEncryptionError(_) => "",
+            ErrorKind::SSSEncryptionError(_) => "",
+            ErrorKind::SSSDecryptionError(_) => "",
             ErrorKind::SizeLimit => "the size limit has been reached",
         }
     }
@@ -40,6 +47,9 @@ impl StdError for ErrorKind {
     fn cause(&self) -> Option<&error::Error> {
         match *self {
             ErrorKind::Io(ref err) => Some(err),
+            ErrorKind::AEADEncryptionError(ref err) => Some(err),
+            ErrorKind::SSSEncryptionError(ref err) => Some(err),
+            ErrorKind::SSSDecryptionError(ref err) => Some(err),
             ErrorKind::InvalidUtf8Encoding(_) => None,
             ErrorKind::ECCRecoveryError(_) => None,
             ErrorKind::BincodeDeserializationError(_) => None,
@@ -62,6 +72,9 @@ impl fmt::Display for ErrorKind {
             ErrorKind::ECCRecoveryError(_) => write!(fmt, "{}", self.description()),
             ErrorKind::BincodeDeserializationError(_) => write!(fmt, "{}", self.description()),
             ErrorKind::SizeLimit => write!(fmt, "{}", self.description()),
+            ErrorKind::AEADEncryptionError(ref err) => write!(fmt, "{}", self.description()),
+            ErrorKind::SSSEncryptionError(ref err) => write!(fmt, "{}", self.description()),
+            ErrorKind::SSSDecryptionError(ref err) => write!(fmt, "{}", self.description()),
         }
     }
 }
