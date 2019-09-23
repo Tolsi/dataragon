@@ -3,7 +3,6 @@
 extern crate crc;
 extern crate sha2;
 
-use byte_strings::concat_bytes;
 use crc::crc16;
 use reed_solomon::Buffer;
 use sha2::{Digest, Sha512};
