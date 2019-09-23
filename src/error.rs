@@ -65,15 +65,3 @@ impl fmt::Display for ErrorKind {
         }
     }
 }
-
-//impl From<reed_solomon::DecoderError> for ErrorKind {
-//    fn from(de: DecoderError) -> Self {
-//        ErrorKind::ECCRecoveryError(de)
-//    }
-//}
-//
-//impl From<Box<bincode::ErrorKind>> for Box<ErrorKind> {
-//    fn from(e: Box<bincode::ErrorKind>) -> Self {
-//        ErrorKind::BincodeDeserializationError(e)?
-//    }
-//}
