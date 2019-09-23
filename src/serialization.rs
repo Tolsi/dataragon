@@ -39,8 +39,8 @@ pub fn add_ecc_and_crc(data: Vec<u8>, allowed_data_damage_level: f32) -> Vec<u8>
 
 
 pub fn try_to_read_shards_with_crc_and_ecc(data: &[u8]) -> Result<Vec<u8>> {
-    let try_to_deserialize: ::std::result::Result<StoredData, Box<bincode::ErrorKind>> = bincode::deserialize(&data)
-        .map_err(|e| e.into());
+    let try_to_deserialize: Result<StoredData> = bincode::deserialize(&data)
+        .map_err(|e| Box::from(ErrorKind::BincodeDeserializationError(e)));
     return try_to_deserialize.and_then(|stored_data|
         if (paranoid_checksum(stored_data.data.as_slice()).to_be_bytes() == stored_data.crc.as_slice()) {
             Ok(stored_data.data)
@@ -48,6 +48,6 @@ pub fn try_to_read_shards_with_crc_and_ecc(data: &[u8]) -> Result<Vec<u8>> {
             let data_and_ecc_bytes = [stored_data.data.as_slice(), stored_data.ecc.as_slice()].concat();
             recover_with_ecc(Buffer::from_slice(data_and_ecc_bytes.as_slice(), stored_data.data.len()), stored_data.ecc.len())
                 .map(|r| r.to_vec())
-                .map_err(|de| de.into())
+                .map_err(|de| Box::from(ErrorKind::ECCRecoveryError(de)))
         });
 }
