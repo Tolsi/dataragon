@@ -2,6 +2,8 @@ extern crate reed_solomon;
 
 use reed_solomon::{Encoder, Buffer};
 use reed_solomon::Decoder;
+use std::error::Error;
+use reed_solomon::DecoderError;
 
 pub fn encode_with_ecc(data: &[u8], ecc_len: usize) -> Buffer {
     // Length of error correction code
@@ -9,14 +11,11 @@ pub fn encode_with_ecc(data: &[u8], ecc_len: usize) -> Buffer {
     return enc.encode(&data[..]);
 }
 
-pub fn recover_with_ecc(data: Buffer, ecc_len: usize) -> Buffer {
+pub fn recover_with_ecc(data: Buffer, ecc_len: usize) -> Result<Buffer, DecoderError> {
     // Length of error correction code
     let dec = Decoder::new(ecc_len);
-    let known_erasures = None;
-    let recovered = dec.correct(&*data, known_erasures).unwrap();
-    return recovered;
+    return dec.correct(&*data, None);
 }
-
 
 pub fn debug_ecc(data: &[u8], allowed_data_damage_level: f32) {
     let ecc_len = data.len() * (2 as f32 * allowed_data_damage_level) as usize;
@@ -38,7 +37,7 @@ pub fn debug_ecc(data: &[u8], allowed_data_damage_level: f32) {
     println!("corrupted:             {:?}", *corrupted);
 
     // Try to recover data
-    let recovered = recover_with_ecc(corrupted, ecc_len);
+    let recovered = recover_with_ecc(corrupted, ecc_len).unwrap();
 
     let recv_str = std::str::from_utf8(recovered.data()).unwrap();
 
@@ -68,7 +67,7 @@ mod tests {
             }
 
             // Try to recover data
-            let recovered = recover_with_ecc(corrupted, ecc_len);
+            let recovered = recover_with_ecc(corrupted, ecc_len).unwrap();
 
             assert_eq!(data, recovered.data());
         }
@@ -92,7 +91,7 @@ mod tests {
             }
 
             // Try to recover data
-            let recovered = recover_with_ecc(corrupted, ecc_len);
+            let recovered = recover_with_ecc(corrupted, ecc_len).unwrap();
 
             assert_eq!(data, recovered.data());
         }

@@ -17,5 +17,5 @@ pub fn split(text: &[u8], allowed_data_damage_level: f32, count: u8, threshold: 
 
 // todo realize
 pub fn restore(shares: Vec<&[u8]>, secret_box: CryptoSecretbox) {
-    shares.map(|s| try_to_read_shards_with_crc_and_ecc(s))
+//    shares.map(|s| try_to_read_shards_with_crc_and_ecc(s))
 }

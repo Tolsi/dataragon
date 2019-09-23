@@ -1,9 +1,15 @@
-extern crate sha2;
-extern crate crc;
+#![feature(proc_macro_hygiene)]
 
+extern crate crc;
+extern crate sha2;
+
+use byte_strings::concat_bytes;
 use crc::crc16;
-use sha2::{Sha512, Digest};
-use crate::ecc::encode_with_ecc;
+use reed_solomon::Buffer;
+use sha2::{Digest, Sha512};
+
+use crate::ecc::{encode_with_ecc, recover_with_ecc};
+use crate::error::*;
 use crate::objects::{CryptoSecretbox, StoredData};
 
 pub fn paranoid_checksum(data: &[u8]) -> u16 {
@@ -32,16 +38,17 @@ pub fn add_ecc_and_crc(data: Vec<u8>, allowed_data_damage_level: f32) -> Vec<u8>
     return bincode::serialize(&stored).unwrap();
 }
 
-pub fn try_to_read_shards_with_crc_and_ecc(stored_shares: &[u8]) -> Result<Vec<u8>, Err> {
-    let tryToDeserialize: Result<StoredData, Err> =  bincode::deserialize(&stored)
-    tryToDeserialize.map()
-    match tryToDeserialize {
-        Ok(storedData) =>
-            if (paranoid_checksum(storedData).to_be_bytes() == storedData.data) {
 
-            } else {
-                Err("")
-            }
-        Err(_) =>
-    }
+pub fn try_to_read_shards_with_crc_and_ecc(data: &[u8]) -> Result<Vec<u8>> {
+    let try_to_deserialize: ::std::result::Result<StoredData, Box<bincode::ErrorKind>> = bincode::deserialize(&data)
+        .map_err(|e| e.into());
+    return try_to_deserialize.and_then(|stored_data|
+        if (paranoid_checksum(stored_data.data.as_slice()).to_be_bytes() == stored_data.crc.as_slice()) {
+            Ok(stored_data.data)
+        } else {
+            let data_and_ecc_bytes = [stored_data.data.as_slice(), stored_data.ecc.as_slice()].concat();
+            recover_with_ecc(Buffer::from_slice(data_and_ecc_bytes.as_slice(), stored_data.data.len()), stored_data.ecc.len())
+                .map(|r| r.to_vec())
+                .map_err(|de| de.into())
+        });
 }

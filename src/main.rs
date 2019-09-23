@@ -13,6 +13,7 @@ mod shamir;
 mod objects;
 mod serialization;
 mod dataragon;
+mod error;
 
 /// Secret sharing params.
 #[derive(StructOpt)]
