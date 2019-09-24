@@ -28,11 +28,9 @@ struct SharingParams {
     t: u8,
 }
 
-fn main() {
-    let args = SharingParams::from_args();
-
-    let count = args.c;
-    let threshold = args.t;
+fn split(sp: SharingParams) {
+    let count = sp.c;
+    let threshold = sp.t;
 
     let read_result = rpassword::read_password_from_tty(Some("Enter your secret (the input is hidden): "));
 
@@ -53,6 +51,10 @@ fn main() {
         println!("Encrypted box: {:?}", encoded_secret_box_with_ecc_and_crc.to_base58());
         ecc::debug_ecc(text, allowed_data_damage_level);
     }).unwrap();
+}
+
+fn main() {
+    split(SharingParams::from_args())
 }
 
 #[cfg(test)]
