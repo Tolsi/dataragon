@@ -19,7 +19,7 @@ pub fn create_data_shares(data: &[u8], count: u8, threshold: u8) -> Result<(Vec<
         .and_then(|boxed|
             // Share the key using `create_keyshares`
             create_keyshares(key, count, threshold)
-                .map(|keyshares| (keyshares, boxed)).map_err(|ssse| ErrorKind::SSSEncryptionError(ssse).into()));
+                .map(|keyshares| (keyshares, boxed)).map_err(|ssse| ErrorKind::ShamirsSecretSharingEncryptionError(ssse).into()));
 
     return result;
 }
@@ -28,7 +28,7 @@ pub fn restore_data_shared(shares: Vec<Vec<u8>>, b: CryptoSecretbox) -> Result<V
     // Recover the key using `combine_keyshares`
     combine_keyshares(&shares).map(|key|
         // Decrypt the secret message using the restored key
-        aead_unwrap(&key, b)).map_err(|e| ErrorKind::SSSDecryptionError(e).into() )
+        aead_unwrap(&key, b)).map_err(|e| ErrorKind::ShamirsSecretSharingDecryptionError(e).into() )
 }
 
 /// AEAD encrypt the message with `key`

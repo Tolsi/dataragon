@@ -17,13 +17,11 @@ pub enum ErrorKind {
     /// If the error stems from the reader/writer that is being used
     /// during (de)serialization, that error will be stored and returned here.
     Io(io::Error),
-    /// Returned if the deserializer attempts to deserialize a string that is not valid utf8
-    InvalidUtf8Encoding(Utf8Error),
     ECCRecoveryError(DecoderError),
-    BincodeDeserializationError(bincode::Error),
+    StoredDataDeserializationError(bincode::Error),
     AEADEncryptionError(io::Error),
-    SSSEncryptionError(SSSError),
-    SSSDecryptionError(SSSError),
+    ShamirsSecretSharingEncryptionError(SSSError),
+    ShamirsSecretSharingDecryptionError(SSSError),
     /// If (de)serializing a message takes more than the provided size limit, this
     /// error is returned.
     SizeLimit,
@@ -33,13 +31,12 @@ impl StdError for ErrorKind {
     fn description(&self) -> &str {
         match *self {
             ErrorKind::Io(ref err) => error::Error::description(err),
-            ErrorKind::InvalidUtf8Encoding(_) => "string is not valid utf8",
             // todo
             ErrorKind::ECCRecoveryError(_) => "",
-            ErrorKind::BincodeDeserializationError(_) => "",
+            ErrorKind::StoredDataDeserializationError(_) => "",
             ErrorKind::AEADEncryptionError(_) => "",
-            ErrorKind::SSSEncryptionError(_) => "",
-            ErrorKind::SSSDecryptionError(_) => "",
+            ErrorKind::ShamirsSecretSharingEncryptionError(_) => "",
+            ErrorKind::ShamirsSecretSharingDecryptionError(_) => "",
             ErrorKind::SizeLimit => "the size limit has been reached",
         }
     }
@@ -48,11 +45,10 @@ impl StdError for ErrorKind {
         match *self {
             ErrorKind::Io(ref err) => Some(err),
             ErrorKind::AEADEncryptionError(ref err) => Some(err),
-            ErrorKind::SSSEncryptionError(ref err) => Some(err),
-            ErrorKind::SSSDecryptionError(ref err) => Some(err),
-            ErrorKind::InvalidUtf8Encoding(_) => None,
-            ErrorKind::ECCRecoveryError(_) => None,
-            ErrorKind::BincodeDeserializationError(_) => None,
+            ErrorKind::ShamirsSecretSharingEncryptionError(ref err) => Some(err),
+            ErrorKind::ShamirsSecretSharingDecryptionError(ref err) => Some(err),
+            ErrorKind::StoredDataDeserializationError(ref err) => Some(err),
+            ErrorKind::ECCRecoveryError(ref err) => None,
             ErrorKind::SizeLimit => None,
         }
     }
@@ -67,14 +63,13 @@ impl From<io::Error> for Error {
 impl fmt::Display for ErrorKind {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            ErrorKind::Io(ref ioerr) => write!(fmt, "io error: {}", ioerr),
-            ErrorKind::InvalidUtf8Encoding(_) => write!(fmt, "{}", self.description()),
-            ErrorKind::ECCRecoveryError(_) => write!(fmt, "{}", self.description()),
-            ErrorKind::BincodeDeserializationError(_) => write!(fmt, "{}", self.description()),
+            ErrorKind::Io(ref ioerr) => write!(fmt, "IO error: {}", ioerr),
+            ErrorKind::ECCRecoveryError(ref err) => write!(fmt, "Error-correcting code encryption error: {:?}", err),
+            ErrorKind::StoredDataDeserializationError(ref err) => write!(fmt, "Stored data deserialization error: {}", err),
             ErrorKind::SizeLimit => write!(fmt, "{}", self.description()),
-            ErrorKind::AEADEncryptionError(ref err) => write!(fmt, "{}", self.description()),
-            ErrorKind::SSSEncryptionError(ref err) => write!(fmt, "{}", self.description()),
-            ErrorKind::SSSDecryptionError(ref err) => write!(fmt, "{}", self.description()),
+            ErrorKind::AEADEncryptionError(ref err) => write!(fmt, "AEAD encryption error: {}", err),
+            ErrorKind::ShamirsSecretSharingEncryptionError(ref err) => write!(fmt, "Shamir's Secret Sharing encryption error: {}", err),
+            ErrorKind::ShamirsSecretSharingDecryptionError(ref err) => write!(fmt, "Shamir's Secret Sharing decryption error: {}", err),
         }
     }
 }
