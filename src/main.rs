@@ -4,6 +4,7 @@ use structopt::StructOpt;
 use crate::shamir::create_data_shares;
 use crate::serialization::paranoid_checksum;
 use crate::ecc::encode_with_ecc;
+use crate::error::*;
 use crate::serialization::add_ecc_and_crc;
 
 use objects::*;
@@ -32,13 +33,9 @@ fn split(sp: SharingParams) {
     let count = sp.c;
     let threshold = sp.t;
 
-    let read_result = rpassword::read_password_from_tty(Some("Enter your secret (the input is hidden): "));
-
-    let password = if read_result.is_err() {
-        rpassword::prompt_password_stdout("Enter your secret (the input is hidden): ").unwrap()
-    } else {
-        read_result.unwrap()
-    };
+    let read_result_from_tty = rpassword::read_password_from_tty(Some("Enter your secret (the input is hidden): "));
+    let password = read_result_from_tty
+        .unwrap_or_else(|_| rpassword::prompt_password_stdout("Enter your secret (the input is hidden): ").unwrap());
 
     let text = password.as_bytes();
     let allowed_data_damage_level = 1.0;
@@ -49,7 +46,6 @@ fn split(sp: SharingParams) {
 
         println!("Shares: {:?}", shares.map(|s| s.to_base58()));
         println!("Encrypted box: {:?}", encoded_secret_box_with_ecc_and_crc.to_base58());
-        ecc::debug_ecc(text, allowed_data_damage_level);
     }).unwrap();
 }
 

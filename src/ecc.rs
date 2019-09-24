@@ -17,33 +17,6 @@ pub fn recover_with_ecc(data: Buffer, ecc_len: usize) -> Result<Buffer, DecoderE
     return dec.correct(&*data, None);
 }
 
-pub fn debug_ecc(data: &[u8], allowed_data_damage_level: f32) {
-    let ecc_len = data.len() * (2 as f32 * allowed_data_damage_level) as usize;
-
-    // Encode data
-    let encoded = encode_with_ecc(data, ecc_len);
-
-    let orig_str = std::str::from_utf8(data).unwrap();
-    println!("message:               {:?}", orig_str);
-    println!("original data:         {:?}", data);
-    println!("error correction code: {:?}", encoded.ecc());
-
-    // Simulate some transmission errors
-    let mut corrupted = encoded;
-    for i in data.len()+6..corrupted.len() {
-        corrupted[i] = 0x0;
-    }
-
-    println!("corrupted:             {:?}", *corrupted);
-
-    // Try to recover data
-    let recovered = recover_with_ecc(corrupted, ecc_len).unwrap();
-
-    let recv_str = std::str::from_utf8(recovered.data()).unwrap();
-
-    println!("repaired:              {:?}", recv_str);
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
