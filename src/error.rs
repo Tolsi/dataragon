@@ -31,12 +31,11 @@ impl StdError for ErrorKind {
     fn description(&self) -> &str {
         match *self {
             ErrorKind::Io(ref err) => error::Error::description(err),
-            // todo
-            ErrorKind::ECCRecoveryError(_) => "",
-            ErrorKind::StoredDataDeserializationError(_) => "",
-            ErrorKind::AEADEncryptionError(_) => "",
-            ErrorKind::ShamirsSecretSharingEncryptionError(_) => "",
-            ErrorKind::ShamirsSecretSharingDecryptionError(_) => "",
+            ErrorKind::ECCRecoveryError(_) => error::Error::description(self),
+            ErrorKind::StoredDataDeserializationError(_) => error::Error::description(self),
+            ErrorKind::AEADEncryptionError(_) => error::Error::description(self),
+            ErrorKind::ShamirsSecretSharingEncryptionError(_) => error::Error::description(self),
+            ErrorKind::ShamirsSecretSharingDecryptionError(_) => error::Error::description(self),
             ErrorKind::SizeLimit => "the size limit has been reached",
         }
     }
