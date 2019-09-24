@@ -17,9 +17,9 @@ pub fn split(text: &[u8], allowed_data_damage_level: f32, count: u8, threshold: 
 }
 
 pub fn restore(shares: Vec<&[u8]>, secret_box: CryptoSecretbox) -> Result<Vec<u8>> {
-    let successfullyRestoredShares: Vec<Vec<u8>> = shares.map(|s| try_to_read_shards_with_crc_and_ecc(s)).into_iter()
+    let successfully_restored_shares: Vec<Vec<u8>> = shares.map(|s| try_to_read_shards_with_crc_and_ecc(s)).into_iter()
         .filter_map(Result::ok)
         .collect();
 
-    return restore_data_shared(successfullyRestoredShares, secret_box);
+    return restore_data_shared(successfully_restored_shares, secret_box);
 }
