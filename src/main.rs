@@ -16,23 +16,29 @@ mod serialization;
 mod dataragon;
 mod error;
 
-/// Secret sharing params.
 #[derive(StructOpt)]
-struct SharingParams {
-    /// The pattern to look for
-    #[structopt(short = "c", long = "count")]
-    /// Minimal number of parts to recover the secret.
-    ///
-    /// Blah blah blah shamir's secret sharing scheme blah blah
-    c: u8,
-    #[structopt(short = "t", long = "threshold")]
-    t: u8,
+#[structopt(name = "Dataragon", about = "Dataragon splits the secret to the shares and recovers them")]
+enum DataragonCommands {
+    Split {
+        #[structopt(short = "c", long = "count")]
+        /// Minimal number of parts to recover the secret.
+        ///
+        /// Blah blah blah shamir's secret sharing scheme blah blah
+        count: u8,
+        #[structopt(short = "t", long = "threshold")]
+        // Threshold
+        threshold: u8,
+    },
+    Recover {
+        #[structopt(long)]
+        shares: Vec<String>,
+        #[structopt(long)]
+        all: bool,
+        repository: Option<String>
+    }
 }
 
-fn split(sp: SharingParams) {
-    let count = sp.c;
-    let threshold = sp.t;
-
+fn split(sp: DataragonCommands::Split) {
     let read_result_from_tty = rpassword::read_password_from_tty(Some("Enter your secret (the input is hidden): "));
     let password = read_result_from_tty
         .unwrap_or_else(|_| rpassword::prompt_password_stdout("Enter your secret (the input is hidden): ").unwrap());
@@ -40,7 +46,7 @@ fn split(sp: SharingParams) {
     let text = password.as_bytes();
     let allowed_data_damage_level = 1.0;
 
-    dataragon::split(text, allowed_data_damage_level, count, threshold).map(|(shares, secret_box)| {
+    dataragon::split(text, allowed_data_damage_level, sp.count, sp.threshold).map(|(shares, secret_box)| {
         let encoded_secret_box: Vec<u8> = bincode::serialize(&secret_box).unwrap();
         let encoded_secret_box_with_ecc_and_crc: Vec<u8> = add_ecc_and_crc(encoded_secret_box, allowed_data_damage_level);
 
@@ -50,7 +56,11 @@ fn split(sp: SharingParams) {
 }
 
 fn main() {
-    split(SharingParams::from_args())
+    match DataragonCommands::from_args() {
+        s@DataragonCommands::Split {c,t} => split(s),
+        r@DataragonCommands::Recover {c,t} => {}
+
+    }
 }
 
 #[cfg(test)]
