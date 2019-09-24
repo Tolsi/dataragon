@@ -20,6 +20,7 @@ pub enum ErrorKind {
     ECCRecoveryError(DecoderError),
     StoredDataDeserializationError(bincode::Error),
     AEADEncryptionError(io::Error),
+    AEADDecryptionError(chacha20_poly1305_aead::DecryptError),
     ShamirsSecretSharingEncryptionError(SSSError),
     ShamirsSecretSharingDecryptionError(SSSError),
     /// If (de)serializing a message takes more than the provided size limit, this
@@ -34,6 +35,7 @@ impl StdError for ErrorKind {
             ErrorKind::ECCRecoveryError(_) => error::Error::description(self),
             ErrorKind::StoredDataDeserializationError(_) => error::Error::description(self),
             ErrorKind::AEADEncryptionError(_) => error::Error::description(self),
+            ErrorKind::AEADDecryptionError(_) => error::Error::description(self),
             ErrorKind::ShamirsSecretSharingEncryptionError(_) => error::Error::description(self),
             ErrorKind::ShamirsSecretSharingDecryptionError(_) => error::Error::description(self),
             ErrorKind::SizeLimit => "the size limit has been reached",
@@ -44,6 +46,7 @@ impl StdError for ErrorKind {
         match *self {
             ErrorKind::Io(ref err) => Some(err),
             ErrorKind::AEADEncryptionError(ref err) => Some(err),
+            ErrorKind::AEADDecryptionError(ref err) => Some(err),
             ErrorKind::ShamirsSecretSharingEncryptionError(ref err) => Some(err),
             ErrorKind::ShamirsSecretSharingDecryptionError(ref err) => Some(err),
             ErrorKind::StoredDataDeserializationError(ref err) => Some(err),
@@ -67,6 +70,7 @@ impl fmt::Display for ErrorKind {
             ErrorKind::StoredDataDeserializationError(ref err) => write!(fmt, "Stored data deserialization error: {}", err),
             ErrorKind::SizeLimit => write!(fmt, "{}", self.description()),
             ErrorKind::AEADEncryptionError(ref err) => write!(fmt, "AEAD encryption error: {}", err),
+            ErrorKind::AEADDecryptionError(ref err) => write!(fmt, "AEAD decryption error: {}", err),
             ErrorKind::ShamirsSecretSharingEncryptionError(ref err) => write!(fmt, "Shamir's Secret Sharing encryption error: {}", err),
             ErrorKind::ShamirsSecretSharingDecryptionError(ref err) => write!(fmt, "Shamir's Secret Sharing decryption error: {}", err),
         }

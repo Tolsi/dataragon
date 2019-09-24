@@ -26,9 +26,11 @@ pub fn create_data_shares(data: &[u8], count: u8, threshold: u8) -> Result<(Vec<
 
 pub fn restore_data_shared(shares: Vec<Vec<u8>>, b: CryptoSecretbox) -> Result<Vec<u8>> {
     // Recover the key using `combine_keyshares`
-    combine_keyshares(&shares).map(|key|
-        // Decrypt the secret message using the restored key
-        aead_unwrap(&key, b)).map_err(|e| ErrorKind::ShamirsSecretSharingDecryptionError(e).into() )
+    combine_keyshares(&shares)
+        .map_err(|e| ErrorKind::ShamirsSecretSharingDecryptionError(e).into())
+        .and_then(|key|
+            // Decrypt the secret message using the restored key
+            aead_unwrap(&key, b))
 }
 
 /// AEAD encrypt the message with `key`
@@ -42,45 +44,45 @@ fn aead_wrap(key: &[u8], text: &[u8]) -> Result<CryptoSecretbox> {
 }
 
 /// AEAD decrypt the message with `key`
-fn aead_unwrap(key: &[u8], boxed: CryptoSecretbox) -> Vec<u8> {
+fn aead_unwrap(key: &[u8], boxed: CryptoSecretbox) -> Result<Vec<u8>> {
     let CryptoSecretbox { ciphertext, tag } = boxed;
     let nonce = vec![0; 12];
     let mut text = Vec::with_capacity(ciphertext.len());
-    chacha20_poly1305_aead::decrypt(&key, &nonce, &[], &ciphertext, &tag, &mut text).unwrap();
-    text
+    chacha20_poly1305_aead::decrypt(&key, &nonce, &[], &ciphertext, &tag, &mut text).map(|_| text)
+        .map_err(|e| ErrorKind::AEADDecryptionError(e).into())
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
 
-//    #[test]
-//    fn ecc_works_with_only_ecc_corruption() {
-//        let text = "abc".as_bytes();
-//        let count = 10;
-//        let threshold = 5;
-//
-//        let (boxed, keyshares) = {
-//            // Generate an ephemeral key
-//            let ref key = rand::random::<[u8; 32]>();
-//
-//            // Encrypt the text using the key
-//            let boxed = aead_wrap(key, text);
-//
-//            // Share the key using `create_keyshares`
-//            let keyshares = create_keyshares(key, count, threshold).unwrap();
-//
-//            (boxed, keyshares)
-//        };
-//
-//        let restored = {
-//            // Recover the key using `combine_keyshares`
-//            let key = combine_keyshares(&keyshares).unwrap();
-//
-//            // Decrypt the secret message using the restored key
-//            aead_unwrap(&key, boxed)
-//        };
-//
-//        assert_eq!(restored, text);
-//    }
+    #[test]
+    fn ecc_works_with_only_ecc_corruption() {
+        let text = "abc".as_bytes();
+        let count = 10;
+        let threshold = 5;
+
+        let (boxed, keyshares) = {
+            // Generate an ephemeral key
+            let ref key = rand::random::<[u8; 32]>();
+
+            // Encrypt the text using the key
+            let boxed = aead_wrap(key, text).unwrap();
+
+            // Share the key using `create_keyshares`
+            let keyshares = create_keyshares(key, count, threshold).unwrap();
+
+            (boxed, keyshares)
+        };
+
+        let restored = {
+            // Recover the key using `combine_keyshares`
+            let key = combine_keyshares(&keyshares).unwrap();
+
+            // Decrypt the secret message using the restored key
+            aead_unwrap(&key, boxed).unwrap()
+        };
+
+        assert_eq!(restored, text);
+    }
 }
