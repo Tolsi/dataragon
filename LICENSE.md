@@ -19,3 +19,5 @@ This is a human-readable summary of (and not a substitute for) the [license](htt
 
 You do not have to comply with the license for elements of the material in the public domain or where your use is permitted by an applicable exception or limitation.
 No warranties are given. The license may not give you all of the permissions necessary for your intended use. For example, other rights such as publicity, privacy, or moral rights may limit how you use the material.
+
+### Copyright (c) 2019 by Sergey Tolsi Tolmachev <tolsi.ru@gmail.com>
