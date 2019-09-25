@@ -36,7 +36,7 @@ pub fn add_ecc_and_crc(data: Vec<u8>, allowed_data_damage_level: f32) -> Vec<u8>
 }
 
 
-pub fn try_to_read_bytes_with_crc_and_ecc(data: &[u8]) -> Result<Vec<u8>> {
+pub fn try_to_read_stored_data(data: &[u8]) -> Result<Vec<u8>> {
     let try_to_deserialize: Result<StoredData> = bincode::deserialize(&data)
         .map_err(|e| Box::from(ErrorKind::StoredDataDeserializationError(e)));
     return try_to_deserialize.and_then(|stored_data|

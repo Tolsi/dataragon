@@ -58,7 +58,7 @@ fn split(count: u8, threshold: u8) {
 
 fn restore(shares: Vec<String>, secretbox_string: String) {
     let secretbox = bs58::decode(secretbox_string).into_vec();
-    let sb = serialization::try_to_read_bytes_with_crc_and_ecc(secretbox.unwrap().as_slice()).unwrap();
+    let sb = serialization::try_to_read_stored_data(secretbox.unwrap().as_slice()).unwrap();
     let secret_box_bytes = sb.as_slice();
     let secret_box: CryptoSecretbox = bincode::deserialize(&secret_box_bytes).unwrap();
     dataragon::restore(shares.map(|s| bs58::decode(s).into_vec().unwrap()), &secret_box).map(|r| {
