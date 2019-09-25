@@ -23,7 +23,7 @@ pub fn create_data_shares(data: &[u8], count: u8, threshold: u8) -> Result<(Vec<
     return result;
 }
 
-pub fn restore_data_shared(shares: Vec<Vec<u8>>, b: CryptoSecretbox) -> Result<Vec<u8>> {
+pub fn restore_data_shared(shares: Vec<Vec<u8>>, b: &CryptoSecretbox) -> Result<Vec<u8>> {
     // Recover the key using `combine_keyshares`
     combine_keyshares(&shares)
         .map_err(|e| ErrorKind::ShamirsSecretSharingDecryptionError(e).into())
@@ -43,7 +43,7 @@ fn aead_wrap(key: &[u8], text: &[u8]) -> Result<CryptoSecretbox> {
 }
 
 /// AEAD decrypt the message with `key`
-fn aead_unwrap(key: &[u8], boxed: CryptoSecretbox) -> Result<Vec<u8>> {
+fn aead_unwrap(key: &[u8], boxed: &CryptoSecretbox) -> Result<Vec<u8>> {
     let CryptoSecretbox { ciphertext, tag } = boxed;
     let nonce = vec![0; 12];
     let mut text = Vec::with_capacity(ciphertext.len());
@@ -79,7 +79,7 @@ mod test {
             let key = combine_keyshares(&keyshares).unwrap();
 
             // Decrypt the secret message using the restored key
-            aead_unwrap(&key, boxed).unwrap()
+            aead_unwrap(&key, &boxed).unwrap()
         };
 
         assert_eq!(restored, text);

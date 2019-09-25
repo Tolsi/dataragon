@@ -61,7 +61,7 @@ fn restore(shares: Vec<String>, secretbox_string: String) {
     let sb = serialization::try_to_read_bytes_with_crc_and_ecc(secretbox.unwrap().as_slice()).unwrap();
     let secret_box_bytes = sb.as_slice();
     let secret_box: CryptoSecretbox = bincode::deserialize(&secret_box_bytes).unwrap();
-    dataragon::restore(shares.map(|s| bs58::decode(s).into_vec().unwrap()), secret_box).map(|r| {
+    dataragon::restore(shares.map(|s| bs58::decode(s).into_vec().unwrap()), &secret_box).map(|r| {
         println!("Result: '{}'", String::from_utf8(r).unwrap());
     }).unwrap();
 }
@@ -71,12 +71,4 @@ fn main() {
         DataragonCommands::Split { count, threshold } => split(count, threshold),
         DataragonCommands::Restore { shares, secretbox } => restore(shares, secretbox)
     }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn ecc_works_with_only_ecc_corruption() {}
 }
