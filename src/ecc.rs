@@ -23,7 +23,7 @@ mod tests {
 
     #[test]
     fn ecc_works_with_sequential_data_and_ecc_corruption() {
-        let data = "abc".as_bytes();
+        let data = "1234567890".as_bytes();
         for allowed_data_damage_level_step in 1..=5 {
             let allowed_data_damage_level = allowed_data_damage_level_step as f32 * 0.5;
             let ecc_len = data.len() * (2 as f32 * allowed_data_damage_level) as usize;
