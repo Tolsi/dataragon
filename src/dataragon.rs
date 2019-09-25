@@ -4,7 +4,7 @@ use map_in_place::MapVecInPlace;
 
 use crate::serialization::paranoid_checksum;
 use crate::shamir::{create_data_shares, restore_data_shared};
-use crate::serialization::{add_ecc_and_crc, try_to_read_shards_with_crc_and_ecc};
+use crate::serialization::{add_ecc_and_crc, try_to_read_bytes_with_crc_and_ecc};
 use shamirsecretsharing::hazmat::{combine_keyshares, create_keyshares};
 use crate::objects::CryptoSecretbox;
 use crate::error::Result;
@@ -16,8 +16,8 @@ pub fn split(text: &[u8], allowed_data_damage_level: f32, count: u8, threshold: 
     });
 }
 
-pub fn restore(shares: Vec<&[u8]>, secret_box: CryptoSecretbox) -> Result<Vec<u8>> {
-    let successfully_restored_shares: Vec<Vec<u8>> = shares.map(|s| try_to_read_shards_with_crc_and_ecc(s)).into_iter()
+pub fn restore(shares: Vec<Vec<u8>>, secret_box: CryptoSecretbox) -> Result<Vec<u8>> {
+    let successfully_restored_shares: Vec<Vec<u8>> = shares.map(|s| try_to_read_bytes_with_crc_and_ecc(s.as_slice())).into_iter()
         .filter_map(Result::ok)
         .collect();
 

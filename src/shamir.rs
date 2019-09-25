@@ -1,4 +1,3 @@
-extern crate base58;
 extern crate chacha20_poly1305_aead;
 extern crate map_in_place;
 extern crate rand;
