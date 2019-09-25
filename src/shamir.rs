@@ -23,7 +23,7 @@ pub fn create_data_shares(data: &[u8], count: u8, threshold: u8) -> Result<(Vec<
     return result;
 }
 
-pub fn restore_data_shared(shares: Vec<Vec<u8>>, b: &CryptoSecretbox) -> Result<Vec<u8>> {
+pub fn combine_data_shares(shares: Vec<Vec<u8>>, b: &CryptoSecretbox) -> Result<Vec<u8>> {
     // Recover the key using `combine_keyshares`
     combine_keyshares(&shares)
         .map_err(|e| ErrorKind::ShamirsSecretSharingDecryptionError(e).into())
@@ -56,7 +56,7 @@ mod test {
     use super::*;
 
     #[test]
-    fn ecc_works_with_only_ecc_corruption() {
+    fn sss_sharing_and_combining_works() {
         let text = "abc".as_bytes();
         let count = 10;
         let threshold = 5;
@@ -74,7 +74,7 @@ mod test {
             (boxed, keyshares)
         };
 
-        let restored = {
+        let combined = {
             // Recover the key using `combine_keyshares`
             let key = combine_keyshares(&keyshares).unwrap();
 
@@ -82,6 +82,6 @@ mod test {
             aead_unwrap(&key, &boxed).unwrap()
         };
 
-        assert_eq!(restored, text);
+        assert_eq!(combined, text);
     }
 }

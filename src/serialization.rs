@@ -79,7 +79,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn restore_works_with_corrupted_data() {
+    fn combine_works_with_corrupted_data() {
         let data = "1234567890".as_bytes();
         // only works until 18 because of ECC size (and POLYNOMIAL_MAX_LENGTH in the end)
         for allowed_data_damage_level_step in 1..=17 {

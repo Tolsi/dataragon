@@ -30,8 +30,8 @@ enum DataragonCommands {
         // Threshold
         threshold: u8,
     },
-    #[structopt(name = "restore")]
-    Restore {
+    #[structopt(name = "combine")]
+    Combine {
         #[structopt(long = "shares")]
         shares: Vec<String>,
         #[structopt(long = "secretbox")]
@@ -56,12 +56,12 @@ fn split(count: u8, threshold: u8) {
     }).unwrap();
 }
 
-fn restore(shares: Vec<String>, secretbox_string: String) {
+fn combine(shares: Vec<String>, secretbox_string: String) {
     let secretbox = bs58::decode(secretbox_string).into_vec();
     let sb = serialization::try_to_read_stored_data(secretbox.unwrap().as_slice()).unwrap();
     let secret_box_bytes = sb.as_slice();
     let secret_box: CryptoSecretbox = bincode::deserialize(&secret_box_bytes).unwrap();
-    dataragon::restore(shares.map(|s| bs58::decode(s).into_vec().unwrap()), &secret_box).map(|r| {
+    dataragon::combine(shares.map(|s| bs58::decode(s).into_vec().unwrap()), &secret_box).map(|r| {
         println!("Result: '{}'", String::from_utf8(r).unwrap());
     }).unwrap();
 }
@@ -69,6 +69,6 @@ fn restore(shares: Vec<String>, secretbox_string: String) {
 fn main() {
     match DataragonCommands::from_args() {
         DataragonCommands::Split { count, threshold } => split(count, threshold),
-        DataragonCommands::Restore { shares, secretbox } => restore(shares, secretbox)
+        DataragonCommands::Combine { shares, secretbox } => combine(shares, secretbox)
     }
 }
