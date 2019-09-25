@@ -24,7 +24,7 @@ pub fn add_ecc_and_crc(data: Vec<u8>, allowed_data_damage_level: f32) -> Result<
         let format_version: u8 = 0;
 
         // todo warning if data array len will be corrupted, then only 255-ECC_BYTES can be recovered
-
+        // todo insert crc every N bytes and determine the correct by number of coincidences?
         let stored = StoredData {
             version: 0,
             crc_algorithm: 0,
