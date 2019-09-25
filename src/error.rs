@@ -19,6 +19,7 @@ pub enum ErrorKind {
     Io(io::Error),
     ECCRecoveryError(DecoderError),
     StoredDataDeserializationError(bincode::Error),
+    StoredDataSerializationError(bincode::Error),
     AEADEncryptionError(io::Error),
     AEADDecryptionError(chacha20_poly1305_aead::DecryptError),
     ShamirsSecretSharingEncryptionError(SSSError),
@@ -26,6 +27,7 @@ pub enum ErrorKind {
     /// If (de)serializing a message takes more than the provided size limit, this
     /// error is returned.
     SizeLimit,
+    EmptyData,
 }
 
 impl StdError for ErrorKind {
@@ -34,8 +36,10 @@ impl StdError for ErrorKind {
             ErrorKind::Io(ref err) => error::Error::description(err),
             ErrorKind::ECCRecoveryError(_) => error::Error::description(self),
             ErrorKind::StoredDataDeserializationError(_) => error::Error::description(self),
+            ErrorKind::StoredDataSerializationError(_) => error::Error::description(self),
             ErrorKind::AEADEncryptionError(_) => error::Error::description(self),
             ErrorKind::AEADDecryptionError(_) => error::Error::description(self),
+            ErrorKind::EmptyData => error::Error::description(self),
             ErrorKind::ShamirsSecretSharingEncryptionError(_) => error::Error::description(self),
             ErrorKind::ShamirsSecretSharingDecryptionError(_) => error::Error::description(self),
             ErrorKind::SizeLimit => "the size limit has been reached",
@@ -50,8 +54,10 @@ impl StdError for ErrorKind {
             ErrorKind::ShamirsSecretSharingEncryptionError(ref err) => Some(err),
             ErrorKind::ShamirsSecretSharingDecryptionError(ref err) => Some(err),
             ErrorKind::StoredDataDeserializationError(ref err) => Some(err),
+            ErrorKind::StoredDataSerializationError(ref err) => Some(err),
             ErrorKind::ECCRecoveryError(ref err) => None,
             ErrorKind::SizeLimit => None,
+            ErrorKind::EmptyData => None,
         }
     }
 }
@@ -68,7 +74,9 @@ impl fmt::Display for ErrorKind {
             ErrorKind::Io(ref ioerr) => write!(fmt, "IO error: {}", ioerr),
             ErrorKind::ECCRecoveryError(ref err) => write!(fmt, "Error-correcting code encryption error: {:?}", err),
             ErrorKind::StoredDataDeserializationError(ref err) => write!(fmt, "Stored data deserialization error: {}", err),
+            ErrorKind::StoredDataSerializationError(ref err) => write!(fmt, "Stored data serialization error: {}", err),
             ErrorKind::SizeLimit => write!(fmt, "{}", self.description()),
+            ErrorKind::EmptyData => write!(fmt, "{}", self.description()),
             ErrorKind::AEADEncryptionError(ref err) => write!(fmt, "AEAD encryption error: {}", err),
             ErrorKind::AEADDecryptionError(ref err) => write!(fmt, "AEAD decryption error: {}", err),
             ErrorKind::ShamirsSecretSharingEncryptionError(ref err) => write!(fmt, "Shamir's Secret Sharing encryption error: {}", err),

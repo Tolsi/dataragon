@@ -47,12 +47,12 @@ fn split(count: u8, threshold: u8) {
     let text = password.as_bytes();
     let allowed_data_damage_level = 1.0;
 
-    dataragon::split(text, allowed_data_damage_level, count, threshold).map(|(shares, secret_box)| {
+    dataragon::split(text, allowed_data_damage_level, count, threshold).and_then(|(shares, secret_box)| {
         let encoded_secret_box: Vec<u8> = bincode::serialize(&secret_box).unwrap();
-        let encoded_secret_box_with_ecc_and_crc: Vec<u8> = add_ecc_and_crc(encoded_secret_box, allowed_data_damage_level);
-
-        println!("Shares: {:?}", shares.map(|s| bs58::encode(s).into_string()));
-        println!("Encrypted box: {:?}", bs58::encode(encoded_secret_box_with_ecc_and_crc).into_string());
+        return add_ecc_and_crc(encoded_secret_box, allowed_data_damage_level).map(|encoded_secret_box_with_ecc_and_crc| {
+            println!("Shares: {:?}", shares.map(|s| bs58::encode(s).into_string()));
+            println!("Encrypted box: {:?}", bs58::encode(encoded_secret_box_with_ecc_and_crc).into_string());
+        })
     }).unwrap();
 }
 
