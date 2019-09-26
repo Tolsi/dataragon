@@ -58,7 +58,7 @@ pub fn try_to_read_stored_data(data: &[u8]) -> Result<Vec<u8>> {
                 stored_data.data
             };
             let data_and_ecc_bytes = [data.as_slice(), stored_data.ecc.as_slice()].concat();
-            recover_with_ecc(Buffer::from_slice(data_and_ecc_bytes.as_slice(), data.len()), stored_data.ecc.len())
+            recover_with_ecc(Buffer::from_slice(data_and_ecc_bytes.as_slice(), data_and_ecc_bytes.len()), stored_data.ecc.len())
                 .map(|r| {
                     let mut data_vec = r.data().to_vec();
                     if data_len_is_corrupted {
@@ -79,7 +79,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn combine_works_with_corrupted_data() {
+    fn combine_works_with_corrupted_data_from_the_end() {
         let data = "1234567890".as_bytes();
         // only works until 18 because of ECC size (and POLYNOMIAL_MAX_LENGTH in the end)
         for allowed_data_damage_level_step in 1..=17 {
@@ -94,6 +94,64 @@ mod tests {
             for i in encoded.len() - corrupt_bytes..encoded.len() {
                 corrupted[i] = 0x0;
             }
+
+            // Try to recover data
+            let recovered = try_to_read_stored_data(corrupted.as_slice());
+
+            assert_eq!(data, recovered.unwrap().as_slice());
+        }
+    }
+
+    #[test]
+    fn combine_works_with_corrupted_data_from_the_ecc_start() {
+        let data = "1234567890".as_bytes();
+        // only works until 18 because of ECC size (and POLYNOMIAL_MAX_LENGTH in the end)
+        for allowed_data_damage_level_step in 1..=17 {
+            let allowed_data_damage_level = allowed_data_damage_level_step as f32 * 0.5;
+
+            // Encode data
+            let encoded = add_ecc_and_crc(data.to_vec(), allowed_data_damage_level).unwrap();
+
+            // Simulate some transmission errors
+            let mut corrupted = encoded.clone();
+            // corrupt crc
+            corrupted[10] = 0;
+            corrupted[11] = 0;
+            let corrupt_bytes = (data.len() as f32 * allowed_data_damage_level) as usize;
+            for i in 21..21 + corrupt_bytes {
+                corrupted[i] = 0x0;
+            }
+
+            // Try to recover data
+            let recovered = try_to_read_stored_data(corrupted.as_slice());
+
+            assert_eq!(data, recovered.unwrap().as_slice());
+        }
+    }
+
+
+    // todo make this works
+    #[ignore]
+    #[test]
+    fn ecc_recovery_should_works_with_partial_ecc_corruption_from_start() {
+        let data = "1234567890".as_bytes();
+        for allowed_data_damage_level_step in 1..=5 {
+            let allowed_data_damage_level = allowed_data_damage_level_step as f32 * 0.5;
+            let ecc_len = data.len() * (2 as f32 * allowed_data_damage_level) as usize;
+
+            // Encode data
+            let encoded = add_ecc_and_crc(data.to_vec(), allowed_data_damage_level).unwrap();
+
+            // Simulate some transmission errors
+            let cut_bytes = (data.len() as f32 * allowed_data_damage_level) as usize;
+            let mut corrupted = [&encoded[0..21], &encoded[21 + cut_bytes..encoded.len()]].concat();
+            // cut ecc size
+            corrupted[13] = (corrupted[13] - cut_bytes as u8) as u8;
+
+            let corrupt_bytes = (data.len() as f32 * allowed_data_damage_level) as usize;
+
+            // corrupt even 1 data byte
+            corrupted[encoded.len() - data.len()] = 0x0;
 
             // Try to recover data
             let recovered = try_to_read_stored_data(corrupted.as_slice());
