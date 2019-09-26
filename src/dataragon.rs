@@ -35,10 +35,10 @@ mod tests {
     #[test]
     fn split_and_combine_works_with_any_n_and_more_of_m_shards() {
         let shared_secret = "supersecret";
-        for m in (1..=5) {
-            for n in (1..=m) {
+        for m in 1..=5 {
+            for n in 1..=m {
                 let (shards, secretbox) = split(shared_secret.as_bytes(), 1.0, m, n).unwrap();
-                for i in (1..=n) {
+                for i in 1..=n {
                     for shards_by_n in shards.as_slice().to_vec().into_iter().combinations(i as usize) {
                         let result = combine(shards_by_n, &secretbox);
                         assert_eq!(result.is_ok(), i >= n);
