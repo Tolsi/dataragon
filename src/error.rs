@@ -55,7 +55,7 @@ impl StdError for ErrorKind {
             ErrorKind::ShamirsSecretSharingDecryptionError(ref err) => Some(err),
             ErrorKind::StoredDataDeserializationError(ref err) => Some(err),
             ErrorKind::StoredDataSerializationError(ref err) => Some(err),
-            ErrorKind::ECCRecoveryError(ref err) => None,
+            ErrorKind::ECCRecoveryError(ref err) => Some(err),
             ErrorKind::SizeLimit => None,
             ErrorKind::EmptyData => None,
         }
