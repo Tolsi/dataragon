@@ -1,13 +1,8 @@
 use map_in_place::MapVecInPlace;
 use structopt::StructOpt;
-use crate::shamir::create_data_shares;
-use crate::serialization::paranoid_checksum;
-use crate::ecc::encode_with_ecc;
-use crate::error::*;
 use crate::serialization::add_ecc_and_crc;
 
 use objects::*;
-use secrets::SecretBox;
 
 mod ecc;
 mod shamir;

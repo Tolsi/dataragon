@@ -7,7 +7,7 @@ use sha2::{Digest, Sha512};
 
 use crate::ecc::{encode_with_ecc, recover_with_ecc};
 use crate::error::*;
-use crate::objects::{CryptoSecretbox, StoredData};
+use crate::objects::StoredData;
 
 pub fn paranoid_checksum(data: &[u8]) -> u16 {
     let mut hasher = Sha512::new();
@@ -20,8 +20,6 @@ pub fn add_ecc_and_crc(data: Vec<u8>, allowed_data_damage_level: f32) -> Result<
     return if data.len() > 0 {
         let ecc_len = data.len() * (2 as f32 * allowed_data_damage_level) as usize;
         let encoded = encode_with_ecc(data.as_slice(), ecc_len);
-
-        let format_version: u8 = 0;
 
         // todo warning if data array len will be corrupted, then only 255-ECC_BYTES can be recovered
         // todo insert crc every N bytes and determine the correct by number of coincidences?
@@ -74,8 +72,6 @@ pub fn try_to_read_stored_data(data: &[u8]) -> Result<Vec<u8>> {
 
 #[cfg(test)]
 mod tests {
-    use itertools::Itertools;
-
     use super::*;
 
     #[test]
@@ -137,7 +133,6 @@ mod tests {
         let data = "1234567890".as_bytes();
         for allowed_data_damage_level_step in 1..=5 {
             let allowed_data_damage_level = allowed_data_damage_level_step as f32 * 0.5;
-            let ecc_len = data.len() * (2 as f32 * allowed_data_damage_level) as usize;
 
             // Encode data
             let encoded = add_ecc_and_crc(data.to_vec(), allowed_data_damage_level).unwrap();
@@ -147,8 +142,6 @@ mod tests {
             let mut corrupted = [&encoded[0..21], &encoded[21 + cut_bytes..encoded.len()]].concat();
             // cut ecc size
             corrupted[13] = (corrupted[13] - cut_bytes as u8) as u8;
-
-            let corrupt_bytes = (data.len() as f32 * allowed_data_damage_level) as usize;
 
             // corrupt even 1 data byte
             corrupted[encoded.len() - data.len()] = 0x0;

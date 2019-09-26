@@ -2,7 +2,6 @@ extern crate reed_solomon;
 
 use reed_solomon::{Encoder, Buffer};
 use reed_solomon::Decoder;
-use std::error::Error;
 use reed_solomon::DecoderError;
 
 pub fn encode_with_ecc(data: &[u8], ecc_len: usize) -> Buffer {

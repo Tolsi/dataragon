@@ -3,7 +3,6 @@ extern crate map_in_place;
 extern crate rand;
 extern crate shamirsecretsharing;
 
-use map_in_place::MapVecInPlace;
 use shamirsecretsharing::hazmat::{combine_keyshares, create_keyshares};
 
 use crate::objects::CryptoSecretbox;

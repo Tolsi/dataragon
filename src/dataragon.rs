@@ -1,13 +1,10 @@
 extern crate map_in_place;
 
-use itertools::Itertools;
 use map_in_place::MapVecInPlace;
-use shamirsecretsharing::hazmat::{combine_keyshares, create_keyshares};
 
 use crate::error::Result;
-use crate::objects::{CryptoSecretbox, StoredData};
+use crate::objects::CryptoSecretbox;
 use crate::serialization::{add_ecc_and_crc, try_to_read_stored_data};
-use crate::serialization::paranoid_checksum;
 use crate::shamir::{combine_data_shares, create_data_shares};
 
 pub fn split(text: &[u8], allowed_data_damage_level: f32, count: u8, threshold: u8) -> Result<(Vec<Vec<u8>>, CryptoSecretbox)> {
