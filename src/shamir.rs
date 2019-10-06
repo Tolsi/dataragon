@@ -5,8 +5,8 @@ extern crate shamirsecretsharing;
 
 use shamirsecretsharing::hazmat::{combine_keyshares, create_keyshares};
 
-use crate::objects::CryptoSecretbox;
 use crate::error::*;
+use crate::objects::CryptoSecretbox;
 
 pub fn create_data_shares(data: &[u8], count: u8, threshold: u8) -> Result<(Vec<Vec<u8>>, CryptoSecretbox)> {
     // Generate an ephemeral key

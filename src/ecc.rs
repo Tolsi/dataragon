@@ -1,36 +1,37 @@
 extern crate reed_solomon;
 
-use reed_solomon::{Encoder, Buffer};
+use itertools::Itertools;
+use reed_solomon::{Buffer, Encoder};
 use reed_solomon::Decoder;
 use reed_solomon::DecoderError;
+
 use crate::objects::ECCData;
-use itertools::Itertools;
 
 pub fn copy_n_times(data: &[u8], times: u8) -> Vec<u8> {
     let mut result = Vec::with_capacity(data.len() * times as usize);
     for i in 0..times {
         result.extend(data.clone())
     }
-    return result
+    return result;
 }
 
 pub fn create_ecc(data: &[u8], allowed_data_damage_level: f32) -> Vec<ECCData> {
     let mut reed_solomon_damage_level = allowed_data_damage_level % 1.0;
     let copy_damage_level = allowed_data_damage_level / 1.0;
     let mut copy_ecc_times = copy_damage_level as u8;
-    if (copy_ecc_times > 1 && reed_solomon_damage_level == 0.0){
+    if copy_ecc_times > 1 && reed_solomon_damage_level == 0.0 {
         reed_solomon_damage_level = 1.0;
         copy_ecc_times -= 1;
     };
     let reed_solomon_ecc_len = data.len() * (2.0 * reed_solomon_damage_level) as usize;
     let mut result: Vec<ECCData> = Vec::new();
-    if (reed_solomon_ecc_len > 0) {
+    if reed_solomon_ecc_len > 0 {
         let ecc_buffer = encode_reed_solomon(data, reed_solomon_ecc_len);
-        result.push(ECCData{ecc_algorithm: 1, ecc: Vec::from(ecc_buffer.ecc())})
+        result.push(ECCData { ecc_algorithm: 1, ecc: Vec::from(ecc_buffer.ecc()) })
     }
-    if (copy_ecc_times > 0) {
+    if copy_ecc_times > 0 {
         let ecc = copy_n_times(data, copy_ecc_times);
-        result.push(ECCData{ecc_algorithm: 0, ecc: Vec::from(ecc)})
+        result.push(ECCData { ecc_algorithm: 0, ecc: Vec::from(ecc) })
     }
     return result;
 }
@@ -56,9 +57,10 @@ pub fn recover_reed_solomon(data: Buffer, ecc_len: usize) -> Result<Buffer, Deco
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use rand::seq::SliceRandom;
     use rand::thread_rng;
+
+    use super::*;
 
     // todo try to remove the data and the start of ecc
     #[test]

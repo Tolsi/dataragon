@@ -1,6 +1,7 @@
+use std::{error, fmt};
 use std::error::Error as StdError;
 use std::io;
-use std::{error, fmt};
+
 use reed_solomon::DecoderError;
 use shamirsecretsharing::SSSError;
 

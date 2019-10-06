@@ -1,8 +1,9 @@
 use map_in_place::MapVecInPlace;
 use structopt::StructOpt;
-use crate::serialization::add_ecc_and_crc;
 
 use objects::*;
+
+use crate::serialization::add_ecc_and_crc;
 
 mod ecc;
 mod shamir;
@@ -30,8 +31,8 @@ enum DataragonCommands {
         #[structopt(long = "shares")]
         shares: Vec<String>,
         #[structopt(long = "secretbox")]
-        secretbox: String
-    }
+        secretbox: String,
+    },
 }
 
 fn split(count: u8, threshold: u8) {
@@ -47,7 +48,7 @@ fn split(count: u8, threshold: u8) {
         return add_ecc_and_crc(encoded_secret_box, allowed_data_damage_level).map(|encoded_secret_box_with_ecc_and_crc| {
             println!("Shares: {:?}", shares.map(|s| bs58::encode(s).into_string()));
             println!("Encrypted box: {:?}", bs58::encode(encoded_secret_box_with_ecc_and_crc).into_string());
-        })
+        });
     }).unwrap();
 }
 
