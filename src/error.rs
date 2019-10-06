@@ -16,7 +16,7 @@ pub enum ErrorKind {
     /// If the error stems from the reader/writer that is being used
     /// during (de)serialization, that error will be stored and returned here.
     Io(io::Error),
-    ECCRecoveryError(DecoderError),
+    ECCRecoveryError,
     StoredDataDeserializationError(bincode::Error),
     StoredDataSerializationError(bincode::Error),
     AEADEncryptionError(io::Error),
@@ -33,7 +33,7 @@ impl StdError for ErrorKind {
     fn description(&self) -> &str {
         match *self {
             ErrorKind::Io(ref err) => error::Error::description(err),
-            ErrorKind::ECCRecoveryError(_) => error::Error::description(self),
+            ErrorKind::ECCRecoveryError => error::Error::description(self),
             ErrorKind::StoredDataDeserializationError(_) => error::Error::description(self),
             ErrorKind::StoredDataSerializationError(_) => error::Error::description(self),
             ErrorKind::AEADEncryptionError(_) => error::Error::description(self),
@@ -54,7 +54,7 @@ impl StdError for ErrorKind {
             ErrorKind::ShamirsSecretSharingDecryptionError(ref err) => Some(err),
             ErrorKind::StoredDataDeserializationError(ref err) => Some(err),
             ErrorKind::StoredDataSerializationError(ref err) => Some(err),
-            ErrorKind::ECCRecoveryError(_) => None,
+            ErrorKind::ECCRecoveryError => None,
             ErrorKind::SizeLimit => None,
             ErrorKind::EmptyData => None,
         }
@@ -71,7 +71,7 @@ impl fmt::Display for ErrorKind {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             ErrorKind::Io(ref ioerr) => write!(fmt, "IO error: {}", ioerr),
-            ErrorKind::ECCRecoveryError(ref err) => write!(fmt, "Error-correcting code encryption error: {:?}", err),
+            ErrorKind::ECCRecoveryError => write!(fmt, "Restoring data error from error-correcting code. Please, try to do it manually."),
             ErrorKind::StoredDataDeserializationError(ref err) => write!(fmt, "Stored data deserialization error: {}", err),
             ErrorKind::StoredDataSerializationError(ref err) => write!(fmt, "Stored data serialization error: {}", err),
             ErrorKind::SizeLimit => write!(fmt, "{}", self.description()),
