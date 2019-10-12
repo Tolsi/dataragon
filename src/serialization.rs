@@ -9,6 +9,7 @@ use sha2::{Digest, Sha512};
 use crate::ecc::{create_ecc, encode_reed_solomon, recover_with_ecc};
 use crate::error::*;
 use crate::objects::{CRCData, EncryptedData, StoredData};
+use heapless::consts::U2048;
 
 pub fn paranoid_checksum(data: &[u8]) -> u16 {
     let mut hasher = Sha512::new();
@@ -36,7 +37,8 @@ pub fn add_ecc_and_crc(data: Vec<u8>, allowed_data_damage_level: f32) -> Result<
         };
 
         // todo allow cutting data with valid serialization/deserialization
-        bincode::serialize(&stored)
+        // todo check different data sizes
+        postcard::to_vec(&stored).map(|v: heapless::Vec<u8, U2048>| v.to_vec())
             .map_err(|e| ErrorKind::StoredDataSerializationError(e).into())
     } else {
         Err(ErrorKind::EmptyData.into())
@@ -45,7 +47,7 @@ pub fn add_ecc_and_crc(data: Vec<u8>, allowed_data_damage_level: f32) -> Result<
 
 
 pub fn try_to_read_stored_data(data: &[u8]) -> Result<Vec<u8>> {
-    let try_to_deserialize: Result<StoredData> = bincode::deserialize(&data)
+    let try_to_deserialize: Result<StoredData> = postcard::from_bytes(&data)
         .map_err(|e| Box::from(ErrorKind::StoredDataDeserializationError(e)));
     return try_to_deserialize.and_then(|stored_data|
         if paranoid_checksum(stored_data.encrypted_data.data.as_slice()).to_be_bytes() == stored_data.crc_data.crc.as_slice() {
@@ -148,8 +150,8 @@ mod tests {
             // Simulate some transmission errors
             let mut corrupted = encoded.clone();
             // corrupt crc
-            corrupted[10] = 0;
-            corrupted[11] = 0;
+            corrupted[3] = 0;
+            corrupted[4] = 0;
             let corrupt_bytes = (data.len() as f32 * allowed_data_damage_level - 1.0) as usize;
 
             // corrupt even 1 data byte
@@ -177,7 +179,7 @@ mod tests {
             let mut corrupted = encoded.clone();
 
             let corrupt_bytes = (data.len() as f32 * allowed_data_damage_level - 1.0) as usize;
-            for i in 29..29 + corrupt_bytes {
+            for i in 20..20 + corrupt_bytes {
                 corrupted[i] = 0;
             }
 
@@ -202,9 +204,9 @@ mod tests {
 
             // Simulate some transmission errors
             let cut_bytes = (data.len() as f32 * allowed_data_damage_level - 1.0) as usize;
-            let mut corrupted = [&encoded[0..29], &encoded[29 + cut_bytes..encoded.len()]].concat();
+            let mut corrupted = [&encoded[0..7], &encoded[7 + cut_bytes..encoded.len()]].concat();
             // cut ecc size
-            corrupted[21] = (corrupted[21] - cut_bytes as u8) as u8;
+            corrupted[7] = (corrupted[7] - cut_bytes as u8) as u8;
 
             // corrupt even 1 data byte
             corrupted[encoded.len() - cut_bytes - data.len()] = 0;

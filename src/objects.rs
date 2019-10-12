@@ -29,6 +29,7 @@ pub struct CRCData {
     pub crc: Vec<u8>,
 }
 
+// todo remove it, replace with just plain ECC data
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct EncryptedData {
     pub encryption_algorithm: u8,

@@ -18,8 +18,8 @@ pub enum ErrorKind {
     /// during (de)serialization, that error will be stored and returned here.
     Io(io::Error),
     ECCRecoveryError,
-    StoredDataDeserializationError(bincode::Error),
-    StoredDataSerializationError(bincode::Error),
+    StoredDataDeserializationError(postcard::Error),
+    StoredDataSerializationError(postcard::Error),
     AEADEncryptionError(io::Error),
     AEADDecryptionError(chacha20_poly1305_aead::DecryptError),
     ShamirsSecretSharingEncryptionError(SSSError),
