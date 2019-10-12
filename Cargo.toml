@@ -21,5 +21,7 @@ crc = "1.8.1"
 serde = "1.0.100"
 map_in_place = "0.1.0"
 itertools = "0.8.0"
-postcard = "0.4.1"
+postcard="0.4.1"
 heapless = "0.5.1"
+as-slice = "0.2.0"
+varint = { git = "https://github.com/sirkibsirkib/serde_varint" }
