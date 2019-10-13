@@ -6,7 +6,7 @@ use reed_solomon::DecoderError;
 
 use crate::objects::ECCData;
 
-pub fn copy_n_times(data: &[u8], times: u8) -> Vec<ECCData> {
+pub fn copy_n_times(data: &[u8], times: usize) -> Vec<ECCData> {
     let mut result = Vec::with_capacity(times as usize);
     for _ in 0..times {
         result.push(ECCData {ecc_algorithm: 0, ecc: Vec::from(data)})
@@ -15,9 +15,9 @@ pub fn copy_n_times(data: &[u8], times: u8) -> Vec<ECCData> {
 }
 
 pub fn create_ecc(data: &[u8], allowed_data_damage_level: f32) -> Vec<ECCData> {
-    let mut reed_solomon_damage_level = allowed_data_damage_level % 1.0;
-    let copy_damage_level = allowed_data_damage_level / 1.0;
-    let mut copy_ecc_times = copy_damage_level as u8;
+    let mut reed_solomon_damage_level = (data.len() as f32 * allowed_data_damage_level) % 1.0;
+    let copy_damage_level = (data.len() as f32 * allowed_data_damage_level) / 1.0;
+    let mut copy_ecc_times = copy_damage_level as usize;
     if copy_ecc_times > 1 && reed_solomon_damage_level == 0.0 {
         reed_solomon_damage_level = 1.0;
         copy_ecc_times -= 1;
@@ -38,6 +38,7 @@ pub fn create_ecc(data: &[u8], allowed_data_damage_level: f32) -> Vec<ECCData> {
 }
 
 // todo warning if data array len will be corrupted, then only 255-ECC_BYTES can be recovered
+// todo move recovery from serialization
 pub fn recover_with_ecc(data: Buffer, ecc_len: usize) -> Result<Buffer, DecoderError> {
     // Length of error correction code
     let dec = Decoder::new(ecc_len);
@@ -83,7 +84,7 @@ mod tests {
             }
 
             // Try to recover data
-            let recovered = recover_with_ecc(corrupted, ecc_len).unwrap();
+            let recovered = recover_reed_solomon(corrupted, ecc_len).unwrap();
 
             assert_eq!(data, recovered.data());
         }
@@ -110,7 +111,7 @@ mod tests {
             }
 
             // Try to recover data
-            let recovered = recover_with_ecc(corrupted, ecc_len).unwrap();
+            let recovered = recover_reed_solomon(corrupted, ecc_len).unwrap();
 
             assert_eq!(data, recovered.data());
         }
@@ -138,7 +139,7 @@ mod tests {
                 corrupted[*i] = 0x0;
             }
             // Try to recover data
-            let recovered = recover_with_ecc(corrupted, ecc_len).unwrap();
+            let recovered = recover_reed_solomon(corrupted, ecc_len).unwrap();
 
             assert_eq!(data, recovered.data());
         }

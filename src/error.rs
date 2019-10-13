@@ -2,7 +2,6 @@ use std::{error, fmt};
 use std::error::Error as StdError;
 use std::io;
 
-use reed_solomon::DecoderError;
 use shamirsecretsharing::SSSError;
 
 /// The result of a serialization or deserialization operation.
@@ -18,7 +17,7 @@ pub enum ErrorKind {
     /// during (de)serialization, that error will be stored and returned here.
     Io(io::Error),
     ECCRecoveryError,
-    StoredDataDeserializationError(postcard::Error),
+    StoredDataDeserializationError(Option<postcard::Error>),
     StoredDataSerializationError(postcard::Error),
     AEADEncryptionError(io::Error),
     AEADDecryptionError(chacha20_poly1305_aead::DecryptError),
@@ -53,7 +52,7 @@ impl StdError for ErrorKind {
             ErrorKind::AEADDecryptionError(ref err) => Some(err),
             ErrorKind::ShamirsSecretSharingEncryptionError(ref err) => Some(err),
             ErrorKind::ShamirsSecretSharingDecryptionError(ref err) => Some(err),
-            ErrorKind::StoredDataDeserializationError(ref err) => Some(err),
+            ErrorKind::StoredDataDeserializationError(ref err) => None,
             ErrorKind::StoredDataSerializationError(ref err) => Some(err),
             ErrorKind::ECCRecoveryError => None,
             ErrorKind::SizeLimit => None,
@@ -73,7 +72,7 @@ impl fmt::Display for ErrorKind {
         match *self {
             ErrorKind::Io(ref ioerr) => write!(fmt, "IO error: {}", ioerr),
             ErrorKind::ECCRecoveryError => write!(fmt, "Restoring data error from error-correcting code. Please, try to do it manually."),
-            ErrorKind::StoredDataDeserializationError(ref err) => write!(fmt, "Stored data deserialization error: {}", err),
+            ErrorKind::StoredDataDeserializationError(_) => write!(fmt, "Stored data deserialization error"),
             ErrorKind::StoredDataSerializationError(ref err) => write!(fmt, "Stored data serialization error: {}", err),
             ErrorKind::SizeLimit => write!(fmt, "{}", self.description()),
             ErrorKind::EmptyData => write!(fmt, "{}", self.description()),

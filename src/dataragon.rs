@@ -15,8 +15,7 @@ pub fn split(text: &[u8], allowed_data_damage_level: f32, count: u8, threshold: 
 }
 
 pub fn combine(shares: Vec<Vec<u8>>, secret_box: &CryptoSecretbox) -> Result<Vec<u8>> {
-    let successfully_combined_shares: Vec<Vec<u8>> = shares.map(|s| try_to_read_stored_data(s.as_slice())).into_iter()
-        .filter_map(Result::ok)
+    let successfully_combined_shares: Vec<Vec<u8>> = shares.filter_map(|s| try_to_read_stored_data(s.as_slice()).ok()).into_iter()
         .collect();
 
     return combine_data_shares(successfully_combined_shares, secret_box);

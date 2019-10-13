@@ -15,7 +15,7 @@ pub struct ECCData {
     pub ecc: Vec<u8>,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, Eq, PartialEq, Debug, Hash, Copy, Clone)]
 pub struct Header {
     #[serde(with = "varint")]
     pub version: u64,
@@ -25,7 +25,8 @@ pub struct Header {
     pub data_len: u64,
     #[serde(with = "varint")]
     pub crc_algorithm: u64,
-    pub crc: Vec<u8>,
+    pub crc0: u8,
+    pub crc1: u8,
 }
 
 /// Stores an encrypted message with a message authentication tag

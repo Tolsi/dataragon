@@ -25,3 +25,4 @@ postcard="0.4.1"
 heapless = "0.5.1"
 as-slice = "0.2.0"
 varint = { git = "https://github.com/sirkibsirkib/serde_varint" }
+integer-encoding = "1.0.7"

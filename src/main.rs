@@ -4,7 +4,9 @@ use structopt::StructOpt;
 use objects::*;
 
 use crate::serialization::add_ecc_and_crc;
-use heapless::consts::U2048;
+use heapless::consts::U16384;
+use itertools::Itertools;
+use std::collections::HashMap;
 
 mod ecc;
 mod shamir;
@@ -45,7 +47,7 @@ fn split(count: u8, threshold: u8) {
     let allowed_data_damage_level = 1.0;
 
     dataragon::split(text, allowed_data_damage_level, count, threshold).and_then(|(shares, secret_box)| {
-        let encoded_secret_box: heapless::Vec<u8, U2048> = postcard::to_vec(&secret_box).unwrap();
+        let encoded_secret_box: heapless::Vec<u8, U16384> = postcard::to_vec(&secret_box).unwrap();
         return add_ecc_and_crc(encoded_secret_box.to_vec(), allowed_data_damage_level).map(|encoded_secret_box_with_ecc_and_crc| {
             println!("Shares: {:?}", shares.map(|s| bs58::encode(s).into_string()));
             println!("Encrypted box: {:?}", bs58::encode(encoded_secret_box_with_ecc_and_crc).into_string());
