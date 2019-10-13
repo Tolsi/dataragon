@@ -6,10 +6,10 @@ use reed_solomon::DecoderError;
 
 use crate::objects::ECCData;
 
-pub fn copy_n_times(data: &[u8], times: u8) -> Vec<u8> {
-    let mut result = Vec::with_capacity(data.len() * times as usize);
+pub fn copy_n_times(data: &[u8], times: u8) -> Vec<ECCData> {
+    let mut result = Vec::with_capacity(times as usize);
     for _ in 0..times {
-        result.extend(data.clone())
+        result.push(ECCData {ecc_algorithm: 0, ecc: Vec::from(data)})
     }
     return result;
 }
@@ -29,12 +29,10 @@ pub fn create_ecc(data: &[u8], allowed_data_damage_level: f32) -> Vec<ECCData> {
         result.push(ECCData { ecc_algorithm: 1, ecc: Vec::from(ecc_buffer.ecc()) })
     }
     if copy_ecc_times > 0 {
-        let ecc = copy_n_times(data, copy_ecc_times);
-        result.push(ECCData { ecc_algorithm: 0, ecc: Vec::from(ecc) })
+        result.extend(copy_n_times(data, copy_ecc_times));
     }
 
-    let ecc = copy_n_times(data, 1);
-    result.push(ECCData { ecc_algorithm: 0, ecc: Vec::from(ecc) });
+    result.push(ECCData {ecc_algorithm: 0, ecc: Vec::from(data)});
 
     return result;
 }

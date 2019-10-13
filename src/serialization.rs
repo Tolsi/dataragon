@@ -13,7 +13,7 @@ use crate::objects::*;
 use heapless::consts::*;
 use as_slice::AsSlice;
 
-const HEADER_LENGTH: usize = 10;
+const HEADER_LENGTH: usize = 7;
 
 pub fn paranoid_checksum(data: &[u8]) -> u16 {
     let mut hasher = Sha512::new();
@@ -24,7 +24,7 @@ pub fn paranoid_checksum(data: &[u8]) -> u16 {
 
 // todo Hamming Error Correcting Code?
 // todo insert crc and data size every N bytes and determine the correct by number of coincidences?
-pub fn insert_header_in_data_crc(data: &[u8], header: &[u8]) -> Vec<u8> {
+pub fn insert_header_in_data_crc(data: &[u8], header: &[u8], allowed_data_damage_level: f32) -> Vec<u8> {
     [header, data].concat()
 }
 
@@ -44,7 +44,7 @@ pub fn add_ecc_and_crc(data: Vec<u8>, allowed_data_damage_level: f32) -> Result<
             // todo allow cutting data with valid serialization/deserialization
             // todo check different data sizes
             postcard::to_vec(&StoredData { data: ecc_data }).map(|r: heapless::Vec<u8, U2048>|
-                insert_header_in_data_crc(r.as_slice(), serialized_header.as_slice())
+                insert_header_in_data_crc(r.as_slice(), serialized_header.as_slice(), allowed_data_damage_level)
             )
         }).map_err(|e| ErrorKind::StoredDataSerializationError(e).into())
     } else {
@@ -54,6 +54,7 @@ pub fn add_ecc_and_crc(data: Vec<u8>, allowed_data_damage_level: f32) -> Result<
 
 pub fn try_to_extract_header(data: &[u8]) -> Result<(Header, Vec<u8>)> {
     postcard::from_bytes(data.take(HEADER_LENGTH as u64).get_ref())
+        .map(|header| (header, Vec::from(&data[HEADER_LENGTH..])))
         .map_err(|e| Box::from(ErrorKind::StoredDataDeserializationError(e)))
 }
 
@@ -133,13 +134,14 @@ mod tests {
 
             let corrupt_bytes = (data.len() as f32 * allowed_data_damage_level - 1.0) as usize;
             for i in encoded.len() - corrupt_bytes..encoded.len() {
-                corrupted[i] = 0;
+                corrupted[i] = 1;
             }
 
             // Try to recover data
             let recovered = try_to_read_stored_data(corrupted.as_slice());
+            let result = recovered.unwrap();
 
-            assert_eq!(data, recovered.unwrap().as_slice());
+            assert_eq!(data, result.as_slice());
         }
     }
 
