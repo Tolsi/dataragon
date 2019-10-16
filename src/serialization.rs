@@ -28,6 +28,7 @@ pub fn paranoid_checksum(data: &[u8]) -> u16 {
     return crc16::checksum_usb(result.as_slice());
 }
 
+// todo RaptorQ!
 // todo labrador_ldpc?
 // todo Hamming Error Correcting Code?
 // todo insert crc and data size every N bytes and determine the correct by number of coincidences?
