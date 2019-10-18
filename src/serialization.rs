@@ -189,6 +189,7 @@ pub fn try_to_recover_data_with_ecc(data: &[u8], header: &Header, other_ecc: &[&
 pub fn try_to_read_stored_data(data: &[u8]) -> Result<Vec<u8>> {
     let header_result: Result<(Header, Vec<u8>)> = try_to_extract_header(data);
     header_result.and_then(|(header, data_bytes)| {
+        // todo serialize/deserialize StoredData manually!
         let try_to_deserialize: Result<StoredData> = postcard::from_bytes(data_bytes.as_slice())
             .map_err(|e| Box::from(ErrorKind::StoredDataDeserializationError(Some(e))));
         try_to_deserialize.and_then(|stored_data| {
