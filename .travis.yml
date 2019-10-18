@@ -6,10 +6,12 @@ rust:
 jobs:
   allow_failures:
     - rust: nightly
+  include:
+    - stage: build
+      script: cargo build --verbose --all
+    - stage: test
+      script: cargo test --verbose --all
 cache: cargo
-script:
-  - cargo build --verbose --all
-  - cargo test --verbose --all
 before_cache:
   - rm -rf "$TRAVIS_HOME/.cargo/registry/src"
 before_script:
