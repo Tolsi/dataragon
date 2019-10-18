@@ -6,10 +6,8 @@ rust:
 jobs:
   allow_failures:
     - rust: nightly
-  fast_finish: true
 script:
   - cargo build --verbose --all
   - cargo test --verbose --all
 before_cache:
   - rm -rf "$TRAVIS_HOME/.cargo/registry/src"
-  ⋮ # rest of your existing "before_cache"
