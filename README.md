@@ -1,4 +1,4 @@
-# dataragon
+# dataragon [![Build Status](https://travis-ci.com/Tolsi/dataragon.svg?branch=master)](https://travis-ci.com/Tolsi/dataragon)
 A tool for splitting and (re)store any secret securely.
 
 Everyone says that secrets should be protected, but there are not enough special software tools to store them inside or outside the computer. They are equated with a password, but it's not quite right. Attacks and security incidents happen due to the lack of such tools. This project is trying to solve this problem.
