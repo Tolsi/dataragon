@@ -7,8 +7,6 @@ jobs:
   allow_failures:
     - rust: nightly
   include:
-    - stage: build
-      script: cargo build --verbose --all
     - stage: test
       script: cargo test --verbose --all
 cache: cargo
