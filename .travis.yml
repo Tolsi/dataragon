@@ -11,3 +11,5 @@ script:
   - cargo test --verbose --all
 before_cache:
   - rm -rf "$TRAVIS_HOME/.cargo/registry/src"
+before_script:
+  - sudo apt-get install -y libsodium-dev
