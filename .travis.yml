@@ -7,8 +7,12 @@ jobs:
   allow_failures:
     - rust: nightly
   include:
-    - stage: test
-      script: cargo test --verbose --all
+    - stage: tests
+      script:
+        - cd lib
+        - cargo test --verbose --all
+        - cd ../cli
+        - cargo test --verbose --all
 cache: cargo
 before_cache:
   - rm -rf "$TRAVIS_HOME/.cargo/registry/src"

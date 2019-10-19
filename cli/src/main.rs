@@ -1,19 +1,12 @@
 use map_in_place::MapVecInPlace;
 use structopt::StructOpt;
 
-use objects::*;
+use dataragon::objects::*;
 
-use crate::serialization::add_ecc_and_crc;
+use dataragon::serialization;
 use heapless::consts::U16384;
 use itertools::Itertools;
 use std::collections::HashMap;
-
-mod ecc;
-mod shamir;
-mod objects;
-mod serialization;
-mod dataragon;
-mod error;
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "Dataragon", about = "Dataragon splits the secret to the shares and recovers them")]
@@ -48,7 +41,7 @@ fn split(count: u8, threshold: u8) {
 
     dataragon::split(text, allowed_data_damage_level, count, threshold).and_then(|(shares, secret_box)| {
         let encoded_secret_box: heapless::Vec<u8, U16384> = postcard::to_vec(&secret_box).unwrap();
-        return add_ecc_and_crc(encoded_secret_box.to_vec(), allowed_data_damage_level).map(|encoded_secret_box_with_ecc_and_crc| {
+        return serialization::add_ecc_and_crc(encoded_secret_box.to_vec(), allowed_data_damage_level).map(|encoded_secret_box_with_ecc_and_crc| {
             println!("Shares: {:?}", shares.map(|s| bs58::encode(s).into_string()));
             println!("Encrypted box: {:?}", bs58::encode(encoded_secret_box_with_ecc_and_crc).into_string());
         });

@@ -1,0 +1,18 @@
+[package]
+name = "dataragon-cli"
+version = "0.0.1"
+authors = ["Sergey Tolmachev <tolsi.ru@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+dataragon = { path = "../lib", version = "0.0.1" }
+structopt = "0.2.10"
+heapless = "0.5.1"
+itertools = "0.8.0"
+rpassword = "4.0"
+postcard="0.4.1"
+bs58 = "0.3.0"
+map_in_place = "0.1.0"
+iui = { git = "https://github.com/rust-native-ui/libui-rs", path = "iui"  }

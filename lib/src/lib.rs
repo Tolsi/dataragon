@@ -7,6 +7,12 @@ use crate::objects::CryptoSecretbox;
 use crate::serialization::{add_ecc_and_crc, try_to_read_stored_data};
 use crate::shamir::{combine_data_shares, create_data_shares};
 
+mod ecc;
+mod shamir;
+pub mod objects;
+pub mod serialization;
+mod error;
+
 pub fn split(text: &[u8], allowed_data_damage_level: f32, count: u8, threshold: u8) -> Result<(Vec<Vec<u8>>, CryptoSecretbox)> {
     return create_data_shares(&text[..], count, threshold).map(|(shares, secret_box)| {
         let shares_with_crc_and_ecc = shares.filter_map(|share| add_ecc_and_crc(share, allowed_data_damage_level).ok());
