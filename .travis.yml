@@ -13,6 +13,8 @@ jobs:
         - cargo test --verbose --all
         - cd ../cli
         - cargo test --verbose --all
+        - cd ../ui
+        - cargo test --verbose --all
 cache: cargo
 before_cache:
   - rm -rf "$TRAVIS_HOME/.cargo/registry/src"
