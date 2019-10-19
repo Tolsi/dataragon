@@ -11,7 +11,7 @@ mod ecc;
 mod shamir;
 pub mod objects;
 pub mod serialization;
-mod error;
+pub mod error;
 
 pub fn split(text: &[u8], allowed_data_damage_level: f32, count: u8, threshold: u8) -> Result<(Vec<Vec<u8>>, CryptoSecretbox)> {
     return create_data_shares(&text[..], count, threshold).map(|(shares, secret_box)| {

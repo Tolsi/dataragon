@@ -1,43 +1,40 @@
 extern crate iui;
 use iui::prelude::*;
 use iui::controls::{Label, Spinbox, Slider, Entry, MultilineEntry, LayoutGrid,
-                    GridAlignment, GridExpand, HorizontalSeparator, ProgressBar};
+                    GridAlignment, GridExpand, HorizontalSeparator, ProgressBar, Button};
 use std::rc::Rc;
 use std::cell::RefCell;
 
 /// This struct will hold the values that multiple callbacks will need to access.
 struct State {
-    slider_val: i32,
-    spinner_val: i32,
-    entry_val: String,
-    multi_val: String,
+    count: i32,
+    threshold: i32,
+    data: String,
+    secretbox: String,
+    shares: String
 }
 
 use map_in_place::MapVecInPlace;
 use structopt::StructOpt;
 
 use dataragon::objects::*;
+use dataragon::error::*;
 
 use dataragon::serialization;
 use heapless::consts::U16384;
 use itertools::Itertools;
 use std::collections::HashMap;
 
-fn split(count: u8, threshold: u8) {
-    let read_result_from_tty = rpassword::read_password_from_tty(Some("Enter your secret (the input is hidden): "));
-    let password = read_result_from_tty
-        .unwrap_or_else(|_| rpassword::prompt_password_stdout("Enter your secret (the input is hidden): ").unwrap());
-
-    let text = password.as_bytes();
+fn split(secret: &String, count: u8, threshold: u8) -> Result<(String, Vec<String>)> {
+    let text = secret.as_bytes();
     let allowed_data_damage_level = 1.0;
 
     dataragon::split(text, allowed_data_damage_level, count, threshold).and_then(|(shares, secret_box)| {
         let encoded_secret_box: heapless::Vec<u8, U16384> = postcard::to_vec(&secret_box).unwrap();
         return serialization::add_ecc_and_crc(encoded_secret_box.to_vec(), allowed_data_damage_level).map(|encoded_secret_box_with_ecc_and_crc| {
-            println!("Shares: {:?}", shares.map(|s| bs58::encode(s).into_string()));
-            println!("Encrypted box: {:?}", bs58::encode(encoded_secret_box_with_ecc_and_crc).into_string());
+            (bs58::encode(encoded_secret_box_with_ecc_and_crc).into_string(), shares.map(|s| bs58::encode(s).into_string()))
         });
-    }).unwrap();
+    })
 }
 
 fn combine(shares: Vec<String>, secretbox_string: String) {
@@ -55,7 +52,7 @@ fn main() {
     let ui = UI::init().unwrap();
 
     // Initialize the state of the application.
-    let state = Rc::new(RefCell::new(State { slider_val: 0, spinner_val: 0, entry_val: "".into(), multi_val: "".into() }));
+    let state = Rc::new(RefCell::new(State { count: 2, threshold: 1, data: "".into(), secretbox: "".into(), shares: "".into() }));
 
     // Create the grid which we'll use to lay out controls
     let mut grid = LayoutGrid::new(&ui);
@@ -65,40 +62,48 @@ fn main() {
     // While it's not necessary to create a block for this, it makes the code a lot easier
     // to read; the indentation presents a visual cue informing the reader that these
     // statements are related.
-    let (mut slider, mut spinner, mut entry, mut multi) = {
+    let (mut count_spinner, mut threshold_spinner, mut data_entry,
+        mut secret_box_entry, mut shares_box_entry, mut split_button) = {
         // Numerical inputs
-        let slider = Slider::new(&ui, 1, 100);
-        let spinner = Spinbox::new(&ui, 1, 100);
+        let spinner = Spinbox::new(&ui, 2, std::i32::MAX);
+        let spinner2 = Spinbox::new(&ui, 1, std::i32::MAX);
         // Text inputs
         let entry = Entry::new(&ui);
         let multi = MultilineEntry::new(&ui);
+        let multi2 = MultilineEntry::new(&ui);
+        let split_button = Button::new(&ui, "Split");
         // Add everything into the grid
-        grid.append(&ui, slider.clone(),
+        grid.append(&ui, spinner.clone(),
                     // This is position (by slot) and size, expansion, and alignment.
                     // In this case, row 0, col 0, 1 by 1, compress as much as possible,
                     // and align to the fill.
                     0, 0, 1, 1, GridExpand::Neither, GridAlignment::Fill, GridAlignment::Fill);
-        grid.append(&ui, spinner.clone(),
-                    // This one is at column zero, row 1.
+        grid.append(&ui, spinner2.clone(),
                     0, 1, 1, 1, GridExpand::Neither, GridAlignment::Fill, GridAlignment::Fill);
-        grid.append(&ui, HorizontalSeparator::new(&ui),
-                    0, 3, 1, 1, GridExpand::Neither, GridAlignment::Fill, GridAlignment::Fill);
+       grid.append(&ui, HorizontalSeparator::new(&ui),
+                    0, 2, 1, 1, GridExpand::Neither, GridAlignment::Fill, GridAlignment::Fill);
         grid.append(&ui, entry.clone(),
-                    0, 4, 1, 1, GridExpand::Neither, GridAlignment::Fill, GridAlignment::Fill);
+                    0, 3, 1, 1, GridExpand::Neither, GridAlignment::Fill, GridAlignment::Fill);
         grid.append(&ui, multi.clone(),
                     // The multiline entry is at column 0, row 1, and expands vertically.
-                    0, 5, 1, 1, GridExpand::Vertical, GridAlignment::Fill, GridAlignment::Fill);
-        (slider, spinner, entry, multi)
+                    0, 4, 1, 1, GridExpand::Both, GridAlignment::Fill, GridAlignment::Fill);
+        grid.append(&ui, multi2.clone(),
+                    // The multiline entry is at column 0, row 1, and expands vertically.
+                    0, 5, 1, 1, GridExpand::Both, GridAlignment::Fill, GridAlignment::Fill);
+        grid.append(&ui, split_button.clone(),
+                    // The multiline entry is at column 0, row 1, and expands vertically.
+                    0, 6, 2, 1, GridExpand::Vertical, GridAlignment::Fill, GridAlignment::Fill);
+        (spinner, spinner2, entry, multi, multi2, split_button)
     };
 
     // Set up the outputs for the application. Organization is very similar to the
     // previous setup.
-    let (add_label, sub_label, text_label, bigtext_label, progress_bar) = {
+    let (add_label, sub_label, text_label, secretbox_label, shares_label) = {
         let add_label = Label::new(&ui, "");
         let sub_label = Label::new(&ui, "");
         let text_label = Label::new(&ui, "");
         let bigtext_label = Label::new(&ui, "");
-        let progress_bar = ProgressBar::indeterminate(&ui);
+        let bigtext2_label = Label::new(&ui, "");
         grid.append(&ui, add_label.clone(),
                     1, 0, 1, 1, GridExpand::Neither, GridAlignment::Fill, GridAlignment::Fill);
         grid.append(&ui, sub_label.clone(),
@@ -106,40 +111,54 @@ fn main() {
         // We skip the #2 & 3 slots so that the text labels will align with their inputs.
         // This is important because the big text label can expand vertically.
         grid.append(&ui, text_label.clone(),
-                    1, 4, 1, 1, GridExpand::Neither, GridAlignment::Fill, GridAlignment::Fill);
+                    1, 3, 1, 1, GridExpand::Neither, GridAlignment::Fill, GridAlignment::Fill);
         grid.append(&ui, bigtext_label.clone(),
+                    1, 4, 1, 1, GridExpand::Neither, GridAlignment::Fill, GridAlignment::Fill);
+        grid.append(&ui, bigtext2_label.clone(),
                     1, 5, 1, 1, GridExpand::Neither, GridAlignment::Fill, GridAlignment::Fill);
-        grid.append(&ui, progress_bar.clone(),
-                    0, 6, 2, 1, GridExpand::Neither, GridAlignment::Fill, GridAlignment::Fill);
-        (add_label, sub_label, text_label, bigtext_label, progress_bar)
+        (add_label, sub_label, text_label, bigtext_label, bigtext2_label)
     };
 
     // The window allows all constituent components to be displayed.
-    let mut window = Window::new(&ui, "Input Output Test", 300, 150, WindowType::NoMenubar);
+    let mut window = Window::new(&ui, "Dataragon UI", 500, 150, WindowType::NoMenubar);
     window.set_child(&ui, grid);
     window.show(&ui);
 
     // These on_changed functions allow updating the application state when a
     // control changes its value.
 
-    slider.on_changed(&ui, {
+    count_spinner.on_changed(&ui, {
         let state = state.clone();
-        move |val| { state.borrow_mut().slider_val = val; }
+        move |val| { state.borrow_mut().count = val; }
     });
 
-    spinner.on_changed(&ui, {
+    threshold_spinner.on_changed(&ui, {
         let state = state.clone();
-        move |val| { state.borrow_mut().spinner_val = val; }
+        move |val| { state.borrow_mut().threshold = val; }
     });
 
-    entry.on_changed(&ui, {
+    data_entry.on_changed(&ui, {
         let state = state.clone();
-        move |val| { state.borrow_mut().entry_val = val; }
+        move |val| { state.borrow_mut().data = val; }
     });
 
-    multi.on_changed(&ui, {
+    secret_box_entry.on_changed(&ui, {
         let state = state.clone();
-        move |val| { state.borrow_mut().multi_val = val; }
+        move |val| { state.borrow_mut().secretbox = val; }
+    });
+
+    shares_box_entry.on_changed(&ui, {
+        let state = state.clone();
+        move |val| { state.borrow_mut().shares = val; }
+    });
+
+    split_button.on_clicked(&ui, {
+        let state = state.clone();
+        move |v| {
+            let (secret_box, shares) = split(&state.borrow().data, state.borrow().count as u8, state.borrow().threshold as u8).unwrap();
+            state.borrow_mut().secretbox = secret_box;
+            state.borrow_mut().shares = "Share:".to_owned() + &shares.join("\nShare:");
+        }
     });
 
 
@@ -152,17 +171,17 @@ fn main() {
         let mut add_label = add_label.clone();
         let mut sub_label = sub_label.clone();
         let mut text_label = text_label.clone();
-        let mut bigtext_label = bigtext_label.clone();
-        let mut progress_bar = progress_bar.clone();
+        let mut secret_box_entry = secret_box_entry.clone();
+        let mut shares_box_entry = shares_box_entry.clone();
         move || {
             let state = state.borrow();
 
             // Update all the outputs
-            add_label.set_text(&ui, &format!("Added: {}", state.slider_val + state.spinner_val));
-            sub_label.set_text(&ui, &format!("Subtracted: {}", state.slider_val - state.spinner_val));
-            text_label.set_text(&ui, &format!("Text: {}", state.entry_val));
-            bigtext_label.set_text(&ui, &format!("Multiline Text: {}", state.multi_val));
-            progress_bar.set_value(&ui, (state.slider_val + state.spinner_val) as u32);
+            add_label.set_text(&ui, &format!("Count: {}", state.count));
+            sub_label.set_text(&ui, &format!("Threshold: {}", state.threshold));
+            text_label.set_text(&ui, &format!("Data: {}", state.data));
+            secret_box_entry.set_value(&ui, &state.secretbox);
+            shares_box_entry.set_value(&ui, &state.shares);
         }
     });
     event_loop.run(&ui);
