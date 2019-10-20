@@ -37,14 +37,13 @@ fn split(secret: &String, count: u8, threshold: u8) -> Result<(String, Vec<Strin
     })
 }
 
-fn combine(shares: Vec<String>, secretbox_string: String) {
+fn combine(shares: Vec<String>, secretbox_string: &String) -> Result<String> {
     let secretbox = bs58::decode(secretbox_string).into_vec();
     let sb = serialization::try_to_read_stored_data(secretbox.unwrap().as_slice()).unwrap();
     let secret_box_bytes = sb.as_slice();
     let secret_box: CryptoSecretbox = postcard::from_bytes(&secret_box_bytes).unwrap();
-    dataragon::combine(shares.map(|s| bs58::decode(s).into_vec().unwrap()), &secret_box).map(|r| {
-        println!("Result: '{}'", String::from_utf8(r).unwrap());
-    }).unwrap();
+    dataragon::combine(shares.map(|s| bs58::decode(s).into_vec().unwrap()), &secret_box).map(|r|
+        String::from_utf8(r).unwrap())
 }
 
 fn main() {
@@ -63,7 +62,8 @@ fn main() {
     // to read; the indentation presents a visual cue informing the reader that these
     // statements are related.
     let (mut count_spinner, mut threshold_spinner, mut data_entry,
-        mut secret_box_entry, mut shares_box_entry, mut split_button) = {
+        mut secret_box_entry, mut shares_box_entry,
+        mut split_button, mut combine_button) = {
         // Numerical inputs
         let spinner = Spinbox::new(&ui, 2, std::i32::MAX);
         let spinner2 = Spinbox::new(&ui, 1, std::i32::MAX);
@@ -72,6 +72,7 @@ fn main() {
         let multi = MultilineEntry::new(&ui);
         let multi2 = MultilineEntry::new(&ui);
         let split_button = Button::new(&ui, "Split");
+        let combine_button = Button::new(&ui, "Combine");
         // Add everything into the grid
         grid.append(&ui, spinner.clone(),
                     // This is position (by slot) and size, expansion, and alignment.
@@ -93,7 +94,10 @@ fn main() {
         grid.append(&ui, split_button.clone(),
                     // The multiline entry is at column 0, row 1, and expands vertically.
                     0, 6, 2, 1, GridExpand::Vertical, GridAlignment::Fill, GridAlignment::Fill);
-        (spinner, spinner2, entry, multi, multi2, split_button)
+        grid.append(&ui, combine_button.clone(),
+                    // The multiline entry is at column 0, row 1, and expands vertically.
+                    0, 7, 2, 1, GridExpand::Vertical, GridAlignment::Fill, GridAlignment::Fill);
+        (spinner, spinner2, entry, multi, multi2, split_button, combine_button)
     };
 
     // Set up the outputs for the application. Organization is very similar to the
@@ -157,7 +161,17 @@ fn main() {
         move |v| {
             let (secret_box, shares) = split(&state.borrow().data, state.borrow().count as u8, state.borrow().threshold as u8).unwrap();
             state.borrow_mut().secretbox = secret_box;
-            state.borrow_mut().shares = "Share:".to_owned() + &shares.join("\nShare:");
+            state.borrow_mut().shares = shares.join("\n");
+        }
+    });
+
+    combine_button.on_clicked(&ui, {
+        let ui = ui.clone();
+        let state = state.clone();
+        let mut data_entry = data_entry.clone();
+        move |v| {
+            let result = combine(state.borrow().shares.split('\n').map(|s| s.to_string()).collect_vec(), &state.borrow().secretbox).unwrap();
+            data_entry.set_value(&ui, &result);
         }
     });
 
