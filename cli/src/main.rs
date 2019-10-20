@@ -1,12 +1,12 @@
+use std::collections::HashMap;
+
+use heapless::consts::U16384;
+use itertools::Itertools;
 use map_in_place::MapVecInPlace;
 use structopt::StructOpt;
 
 use dataragon::objects::*;
-
 use dataragon::serialization;
-use heapless::consts::U16384;
-use itertools::Itertools;
-use std::collections::HashMap;
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "Dataragon", about = "Dataragon splits the secret to the shares and recovers them")]

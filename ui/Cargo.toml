@@ -15,4 +15,4 @@ rpassword = "4.0"
 postcard="0.4.1"
 bs58 = "0.3.0"
 map_in_place = "0.1.0"
-iui = { git = "https://github.com/rust-native-ui/libui-rs", path = "iui"  }
+iui = { git = "https://github.com/rust-native-ui/libui-rs" }

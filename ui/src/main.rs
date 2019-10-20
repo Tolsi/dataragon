@@ -1,9 +1,20 @@
 extern crate iui;
-use iui::prelude::*;
-use iui::controls::{Label, Spinbox, Slider, Entry, MultilineEntry, LayoutGrid,
-                    GridAlignment, GridExpand, HorizontalSeparator, ProgressBar, Button};
-use std::rc::Rc;
+
 use std::cell::RefCell;
+use std::collections::HashMap;
+use std::rc::Rc;
+
+use heapless::consts::U16384;
+use itertools::Itertools;
+use iui::controls::{Button, Entry, GridAlignment, GridExpand, HorizontalSeparator, Label,
+                    LayoutGrid, MultilineEntry, ProgressBar, Slider, Spinbox};
+use iui::prelude::*;
+use map_in_place::MapVecInPlace;
+use structopt::StructOpt;
+
+use dataragon::error::*;
+use dataragon::objects::*;
+use dataragon::serialization;
 
 /// This struct will hold the values that multiple callbacks will need to access.
 struct State {
@@ -11,19 +22,8 @@ struct State {
     threshold: i32,
     data: String,
     secretbox: String,
-    shares: String
+    shares: String,
 }
-
-use map_in_place::MapVecInPlace;
-use structopt::StructOpt;
-
-use dataragon::objects::*;
-use dataragon::error::*;
-
-use dataragon::serialization;
-use heapless::consts::U16384;
-use itertools::Itertools;
-use std::collections::HashMap;
 
 fn split(secret: &String, count: u8, threshold: u8) -> Result<(String, Vec<String>)> {
     let text = secret.as_bytes();
@@ -81,7 +81,7 @@ fn main() {
                     0, 0, 1, 1, GridExpand::Neither, GridAlignment::Fill, GridAlignment::Fill);
         grid.append(&ui, spinner2.clone(),
                     0, 1, 1, 1, GridExpand::Neither, GridAlignment::Fill, GridAlignment::Fill);
-       grid.append(&ui, HorizontalSeparator::new(&ui),
+        grid.append(&ui, HorizontalSeparator::new(&ui),
                     0, 2, 1, 1, GridExpand::Neither, GridAlignment::Fill, GridAlignment::Fill);
         grid.append(&ui, entry.clone(),
                     0, 3, 1, 1, GridExpand::Neither, GridAlignment::Fill, GridAlignment::Fill);
