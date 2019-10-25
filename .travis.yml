@@ -19,4 +19,4 @@ cache: cargo
 before_cache:
   - rm -rf "$TRAVIS_HOME/.cargo/registry/src"
 before_script:
-  - sudo apt-get install -y libsodium-dev
+  - sudo apt-get install -y libsodium-dev build-essential libgtk-3-dev
