@@ -14,17 +14,19 @@ pub mod serialization;
 pub mod error;
 
 pub fn split(text: &[u8], allowed_data_damage_level: f32, count: u8, threshold: u8) -> Result<(Vec<Vec<u8>>, CryptoSecretbox)> {
-    return create_data_shares(&text[..], count, threshold).map(|(shares, secret_box)| {
-        let shares_with_crc_and_ecc = shares.filter_map(|share| add_ecc_and_crc(share, allowed_data_damage_level).ok());
-        return (shares_with_crc_and_ecc, secret_box);
-    });
+    return create_data_shares(&text[..], count, threshold)
+//        .map(|(shares, secret_box)| {
+//        let shares_with_crc_and_ecc = shares.filter_map(|share| add_ecc_and_crc(share, allowed_data_damage_level).ok());
+//        return (shares_with_crc_and_ecc, secret_box);
+//    });
 }
 
 pub fn combine(shares: Vec<Vec<u8>>, secret_box: &CryptoSecretbox) -> Result<Vec<u8>> {
-    let successfully_combined_shares: Vec<Vec<u8>> = shares.filter_map(|s| try_to_read_stored_data(s.as_slice()).ok()).into_iter()
-        .collect();
+//    let successfully_combined_shares: Vec<Vec<u8>> =
+//        shares.filter_map(|s| try_to_read_stored_data(s.as_slice()).ok()).into_iter()
+//        .collect();
 
-    return combine_data_shares(successfully_combined_shares, secret_box);
+    return combine_data_shares(shares, secret_box);
 }
 
 

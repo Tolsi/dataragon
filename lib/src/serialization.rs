@@ -211,6 +211,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[ignore]
     fn combine_works_with_corrupted_data_from_the_end() {
         let data = "1234567890".as_bytes();
         // only works until 18 because of ECC size (and POLYNOMIAL_MAX_LENGTH in the end)
