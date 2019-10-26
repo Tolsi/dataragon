@@ -18,7 +18,7 @@ Everyone says that secrets should be protected, but there are not enough special
   - [ ] try Labrador LDPC
   - [ ] try Hamming Error Correcting Code
   - [ ] try to develop myself
-- [ ] Project landing page
+- [x] [Project landing page](http://tolsi.ru/dataragon-project/)
 - [ ] Security audit
 
 # Example
