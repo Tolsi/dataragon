@@ -17,6 +17,7 @@ Everyone says that secrets should be protected, but there are not enough special
   - [ ] try RaptorQ
   - [ ] try Labrador LDPC
   - [ ] try Hamming Error Correcting Code
+  - [ ] try [Luby transform code](https://en.wikipedia.org/wiki/Luby_transform_code)
   - [ ] try to develop myself
 - [x] [Project landing page](http://tolsi.ru/dataragon-project/)
 - [ ] Security audit
