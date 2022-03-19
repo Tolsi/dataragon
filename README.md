@@ -3,6 +3,8 @@ A tool for splitting and (re)store any data securely.
 
 Everyone says that secrets should be protected, but there are not enough special software tools to store them inside or outside the computer. Most of them are equated with a password, but it's not quite right. Attacks and security incidents happen due to the lack of such tools. This project is trying to solve this problem.
 
+The project was abandoned due to lack of interest. If you think it might be useful for you, then try to use [ssss](https://linux.die.net/man/1/ssss).
+
 [Project slides](https://docs.google.com/presentation/d/1JUfoCYVsErDEGUozLOO6yQ6b8HN6dwijWEt1ppFcKCA/edit?usp=sharing)
 
 # Status
