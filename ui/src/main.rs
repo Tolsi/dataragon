@@ -1,14 +1,14 @@
-extern crate iui;
+#![cfg_attr(not(test), windows_subsystem = "windows")]
+#![cfg_attr(test, windows_subsystem = "console")]
 
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
-use heapless::consts::U16384;
 use itertools::Itertools;
-use iui::controls::{Button, Entry, GridAlignment, GridExpand, HorizontalSeparator, Label,
+use libui::controls::{Button, Entry, GridAlignment, GridExpand, HorizontalSeparator, Label,
                     LayoutGrid, MultilineEntry, ProgressBar, Slider, Spinbox};
-use iui::prelude::*;
+use libui::prelude::*;
 use map_in_place::MapVecInPlace;
 use structopt::StructOpt;
 
@@ -30,7 +30,7 @@ fn split(secret: &String, count: u8, threshold: u8) -> Result<(String, Vec<Strin
     let allowed_data_damage_level = 1.0;
 
     dataragon::split(text, allowed_data_damage_level, count, threshold).and_then(|(shares, secret_box)| {
-        let encoded_secret_box: heapless::Vec<u8, U16384> = postcard::to_vec(&secret_box).unwrap();
+        let encoded_secret_box: heapless::Vec<u8, 16384> = postcard::to_vec(&secret_box).unwrap();
         return serialization::add_ecc_and_crc(encoded_secret_box.to_vec(), allowed_data_damage_level).map(|encoded_secret_box_with_ecc_and_crc| {
             (bs58::encode(encoded_secret_box_with_ecc_and_crc).into_string(), shares.map(|s| bs58::encode(s).into_string()))
         });
@@ -51,7 +51,7 @@ fn main() {
     let ui = UI::init().unwrap();
 
     // Initialize the state of the application.
-    let state = Rc::new(RefCell::new(State { count: 2, threshold: 1, data: "".into(), secretbox: "".into(), shares: "".into() }));
+    let state = Rc::new(RefCell::new(State { count: 2, threshold: 1, data: String::from(""), secretbox: String::from(""), shares: String::from("") }));
 
     // Create the grid which we'll use to lay out controls
     let mut grid = LayoutGrid::new(&ui);
