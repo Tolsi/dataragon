@@ -5,7 +5,7 @@ Everyone says that secrets should be protected, but there are not enough special
 
 The project was abandoned due to lack of interest. If you think it might be useful for you, then try to use [ssss](https://linux.die.net/man/1/ssss).
 
-[Project slides](https://docs.google.com/presentation/d/1JUfoCYVsErDEGUozLOO6yQ6b8HN6dwijWEt1ppFcKCA/edit?usp=sharing)
+[Project slides](https://docs.google.com/presentation/d/e/2PACX-1vS4iCimP_QcKrp9d7d4_TF0lYG_Wp9nWS4_NB6nw0lOReJNpLKtiDBClNlIB0CIom_DX_Vuh8F6kntb/pub?start=false&loop=false&delayms=3000&slide=id.p1)
 
 # Status
 
