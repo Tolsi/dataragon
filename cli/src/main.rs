@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use heapless::consts::U16384;
 use itertools::Itertools;
 use map_in_place::MapVecInPlace;
 use structopt::StructOpt;
@@ -32,15 +31,15 @@ enum DataragonCommands {
 }
 
 fn split(count: u8, threshold: u8) {
-    let read_result_from_tty = rpassword::read_password_from_tty(Some("Enter your secret (the input is hidden): "));
-    let password = read_result_from_tty
-        .unwrap_or_else(|_| rpassword::prompt_password_stdout("Enter your secret (the input is hidden): ").unwrap());
+    let read_password = rpassword::prompt_password("Enter your secret (the input is hidden): ");
+    let password = read_password
+        .unwrap_or_else(|_| rpassword::prompt_password("Enter your secret (the input is hidden): ").unwrap());
 
     let text = password.as_bytes();
     let allowed_data_damage_level = 1.0;
 
     dataragon::split(text, allowed_data_damage_level, count, threshold).and_then(|(shares, secret_box)| {
-        let encoded_secret_box: heapless::Vec<u8, U16384> = postcard::to_vec(&secret_box).unwrap();
+        let encoded_secret_box: heapless::Vec<u8, 16384> = postcard::to_vec(&secret_box).unwrap();
         return serialization::add_ecc_and_crc(encoded_secret_box.to_vec(), allowed_data_damage_level).map(|encoded_secret_box_with_ecc_and_crc| {
             println!("Shares: {:?}", shares.map(|s| bs58::encode(s).into_string()));
             println!("Encrypted box: {:?}", bs58::encode(encoded_secret_box_with_ecc_and_crc).into_string());

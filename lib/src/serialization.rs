@@ -7,8 +7,7 @@ use std::hash::Hash;
 use std::io::Read;
 
 use as_slice::AsSlice;
-use crc::crc16;
-use heapless::consts::*;
+use crc::{Crc, Algorithm, CRC_16_IBM_SDLC, CRC_32_ISCSI};
 use integer_encoding::*;
 use itertools::*;
 use map_in_place::MapVecInPlace;
@@ -20,12 +19,13 @@ use crate::error::*;
 use crate::objects::*;
 
 const HEADER_LENGTH: usize = 6;
+const X25: crc::Crc<u16> = crc::Crc::<u16>::new(&crc::CRC_16_IBM_SDLC);
 
 pub fn paranoid_checksum(data: &[u8]) -> u16 {
     let mut hasher = Sha512::new();
-    hasher.input(data);
-    let result = hasher.result();
-    return crc16::checksum_usb(result.as_slice());
+    hasher.update(data);
+    let result = hasher.finalize();
+    return X25.checksum(result.as_slice());
 }
 
 // todo RaptorQ!
@@ -135,10 +135,10 @@ pub fn add_ecc_and_crc(data: Vec<u8>, allowed_data_damage_level: f32) -> Result<
             crc1: crc[1],
         };
 
-        postcard::to_vec(&header).and_then(|serialized_header: heapless::Vec<u8, U32>| {
+        postcard::to_vec(&header).and_then(|serialized_header: heapless::Vec<u8, 32>| {
             // todo allow cutting data with valid serialization/deserialization
             // todo check different data sizes
-            postcard::to_vec(&StoredData { data: ecc_data }).map(|r: heapless::Vec<u8, U16384>| {
+            postcard::to_vec(&StoredData { data: ecc_data }).map(|r: heapless::Vec<u8, 16384>| {
                 let allowed_data_damage_bits = (allowed_data_damage_level * data.len() as f32) as usize * 8;
                 insert_header_in_data_crc(r.as_slice(), serialized_header.as_slice(), allowed_data_damage_bits)
             })

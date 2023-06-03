@@ -8,10 +8,10 @@ edition = "2018"
 
 [dependencies]
 dataragon = { path = "../lib", version = "0.0.1" }
-structopt = "0.2.10"
-heapless = "0.5.1"
-itertools = "0.8.0"
-rpassword = "4.0"
-postcard="0.4.1"
-bs58 = "0.3.0"
+structopt = "0.3.26"
+heapless = "0.7.16"
+itertools = "0.10.5"
+rpassword = "7.2.0"
+postcard="1.0.4"
+bs58 = "0.5.0"
 map_in_place = "0.1.0"
